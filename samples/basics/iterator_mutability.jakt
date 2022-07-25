@@ -1,0 +1,26 @@
+/// Expect:
+/// - output: "OK\nOK\n"
+
+struct Foos {
+    foo: [Foo]
+}
+
+class Foo {
+    bar: String
+
+    public function update_bar(mut this, baz: String) throws {
+        .bar = baz
+    }
+}
+
+function main() {
+    mut foos = Foos(foo: [Foo(bar: "test1"), Foo(bar: "test2")])
+
+    for foo in foos.foo.iterator() {
+        foo.update_bar(baz: "test")
+    }
+
+    for foo in foos.foo.iterator() {
+        println("{}", foo)
+    }
+}

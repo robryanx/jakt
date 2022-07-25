@@ -4270,7 +4270,7 @@ struct Typechecker {
         DestructuringAssignment(vars, var_decl, span) => .typecheck_destructuring_assignment(vars, var_decl, scope_id, safety_mode, span)
         If(condition, then_block, else_statement, span) => .typecheck_if(condition, then_block, else_statement, scope_id, safety_mode, span)
         Garbage(span) => CheckedStatement::Garbage(span)
-        For(iterator_name, name_span, range, block, span) => .typecheck_for(iterator_name,  name_span, range, block, scope_id, safety_mode, span)
+        For(iterator_name, iterator_is_mutable, name_span, range, block, span) => .typecheck_for(iterator_name, iterator_is_mutable, name_span, range, block, scope_id, safety_mode, span)
         Guard(expr, else_block, span) => .typecheck_guard(expr, else_block, scope_id, safety_mode, span)
     }
 
@@ -4297,12 +4297,11 @@ struct Typechecker {
         return CheckedStatement::If(condition, then_block: checked_else_block, else_statement: CheckedStatement::none(), span)
     }
 
-    function typecheck_for(mut this, iterator_name: String, name_span: Span, range: ParsedExpression, block: ParsedBlock, scope_id: ScopeId, safety_mode: SafetyMode, span: Span) throws -> CheckedStatement {
+    function typecheck_for(mut this, iterator_name: String, iterator_is_mutable: bool, name_span: Span, range: ParsedExpression, block: ParsedBlock, scope_id: ScopeId, safety_mode: SafetyMode, span: Span) throws -> CheckedStatement {
         let maybe_span = block.find_yield_span()
         if maybe_span.has_value() {
             .error("a 'for' loop block is not allowed to yield values", maybe_span!)
         }
-
 
         // Translate `for x in expr { body }` to
         // block {
@@ -4324,7 +4323,6 @@ struct Typechecker {
         let iterable_expr = .typecheck_expression(range, scope_id, safety_mode, type_hint: None)
         mut iterable_should_be_mutable = false
 
-
         let iterable_type = .program.get_type(expression_type(iterable_expr))
 
         match iterable_type {
@@ -4342,7 +4340,7 @@ struct Typechecker {
                     .error("Iterator must have a .next() method", range.span())
                 } else {
                     let next_method_function = .get_function(next_method_function_id!)
-                    // Check whether we need to make the iteratar mutable
+                    // Check whether we need to make the iterator mutable
                     if next_method_function.is_mutating() {
                         iterable_should_be_mutable = true
                     }
@@ -4351,6 +4349,10 @@ struct Typechecker {
             else => {
                 .error("Iterator must have a .next() method", name_span)
             }
+        }
+
+        if not iterable_should_be_mutable and iterator_is_mutable {
+            .error("Mutable iterator can't be used with Immutable iterable", span)
         }
 
         let rewritten_statement = ParsedStatement::Block(
@@ -4429,9 +4431,7 @@ struct Typechecker {
                                 var: ParsedVarDecl(
                                     name: iterator_name,
                                     parsed_type: ParsedType::Empty,
-                                    // FIXME: loop variable mutability should be independent
-                                    // of iterable mutability
-                                    is_mutable: iterable_should_be_mutable,
+                                    is_mutable: iterator_is_mutable,
                                     inlay_span: name_span,
                                     span: name_span
                                     ),

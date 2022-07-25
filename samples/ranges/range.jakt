@@ -4,7 +4,7 @@
 function main() {
     mut total = 0
 
-    for x in 1..10 {
+    for mut x in 1..10 {
         total += x
     }
 

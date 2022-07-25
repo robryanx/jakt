@@ -98,7 +98,7 @@ struct ParsedNamespace {
         .name == other.name and .import_path_if_extern == other.import_path_if_extern
 
     function add_module_import(mut this, anon import_: ParsedModuleImport) throws {
-        for module_import in .module_imports.iterator() {
+        for mut module_import in .module_imports.iterator() {
             if module_import.is_equivalent_to(import_) {
                 module_import.merge_import_list(import_.import_list)
                 return
@@ -108,7 +108,7 @@ struct ParsedNamespace {
     }
 
     function add_extern_import(mut this, anon import_: ParsedExternImport) throws {
-        for extern_import in .extern_imports.iterator() {
+        for mut extern_import in .extern_imports.iterator() {
             if extern_import.is_equivalent_to(import_) {
                 extern_import.assigned_namespace.merge_with(import_.assigned_namespace)
                 return
@@ -118,7 +118,7 @@ struct ParsedNamespace {
     }
 
     function add_child_namespace(mut this, anon namespace_: ParsedNamespace) throws {
-        for child_namespace in .namespaces.iterator() {
+        for mut child_namespace in .namespaces.iterator() {
             if child_namespace.is_equivalent_to(namespace_) {
                 child_namespace.merge_with(namespace_)
                 return
@@ -260,7 +260,7 @@ boxed enum ParsedStatement {
     Block(block: ParsedBlock, span: Span)
     Loop(block: ParsedBlock, span: Span)
     While(condition: ParsedExpression, block: ParsedBlock, span: Span)
-    For(iterator_name: String, name_span: Span, range: ParsedExpression, block: ParsedBlock, span: Span)
+    For(iterator_name: String, iterator_is_mutable: bool, name_span: Span, range: ParsedExpression, block: ParsedBlock, span: Span)
     Break(Span)
     Continue(Span)
     Return(expr: ParsedExpression?, span: Span)
@@ -2088,6 +2088,12 @@ struct Parser {
         let start_span = .current().span()
         .index++
 
+        mut iterator_is_mutable = false
+        if .current() is Mut {
+            iterator_is_mutable = true
+            .index++
+        }
+
         return match .current() {
             Identifier(name) => {
                 let iterator_name = name
@@ -2103,7 +2109,7 @@ struct Parser {
                 let range = .parse_expression(allow_assignments: false)
                 let block = .parse_block();
 
-                yield ParsedStatement::For(iterator_name, name_span, range, block, span: merge_spans(start_span, .previous().span()))
+                yield ParsedStatement::For(iterator_name, iterator_is_mutable, name_span, range, block, span: merge_spans(start_span, .previous().span()))
             }
             else => {
                 .error("Expected iterator name", .current().span())

@@ -66,7 +66,6 @@ function mkdir_if_not_present(path: String) throws {
     }
 }
 
-
 function has_jakt_extension(name: String) throws -> bool {
     if name.length() < 5 {
         return false
@@ -99,7 +98,6 @@ function get_jakt_files_under(directory: String, mut results: [String]) throws -
 
     return results
 }
-
 
 import extern "process.h" {
     namespace process {
@@ -387,7 +385,7 @@ struct ExpectedResult {
 
 
 struct Test {
-    result: ExpectedResult
+    results: [ExpectedResult]
     file_name: String
     directory_index: usize
 }
@@ -395,7 +393,7 @@ struct Test {
 struct TestsRunResult {
     passed_count: usize
     failed_count: usize
-    failed_reasons: [String:TestFailedReason]?
+    failed_reasons: [String:[TestFailedReason]]?
 }
 
 enum TestFailedReason {
@@ -421,9 +419,8 @@ struct TestScheduler {
     directories: [String]
     passed_count: usize
     failed_count: usize
-    failed_reasons: [String:TestFailedReason]?
+    failed_reasons: [String:[TestFailedReason]]?
     // TODO: timeout
-
 
     /// Returns whether the test that the exited process was running has passed
     /// or not
@@ -433,10 +430,12 @@ struct TestScheduler {
         .running_tests.remove(pid)
         let maybe_stage = TestStage::from_exit_code(exit_code)
 
+        mut reasons: [TestFailedReason] = []
+
         // unknown exit code. Assume that the job exited abruptly.
         if not maybe_stage.has_value() {
             if .failed_reasons.has_value() {
-                .failed_reasons![test.file_name] = TestFailedReason::AbruptExit(exit_code)
+                reasons.push(TestFailedReason::AbruptExit(exit_code))
             }
             return TestExitedResult::Failed(file: test.file_name)
         }
@@ -448,72 +447,78 @@ struct TestScheduler {
                     .directories[test.directory_index])
                 mut file = File::open_for_reading(path)
                 let had = bytes_to_string(file.read_all())
-                .failed_reasons![test.file_name] = TestFailedReason::ClangError(had)
+                reasons.push(TestFailedReason::ClangError(had))
             }
             return TestExitedResult::Failed(file: test.file_name)
         }
 
-        // check the exit code before anything
-        let expected_stage = test.result.kind.to_stage()
+        for result in test.results.iterator() {
+            // check the exit code before anything
+            let expected_stage = result.kind.to_stage()
 
+            if not stage.equals(expected_stage) {
+                if .failed_reasons.has_value() {
+                    if not (stage is TranspileJakt) {
+                        panic("unreachable: Since clang++ errors and other codes get handled otherwise, only thing that could fail before its expected stage is Jakt to C++.")
+                    }
 
-        if not stage.equals(expected_stage) {
-            if .failed_reasons.has_value() {
+                    let file_to_check = format("{}/compile_jakt.err"
+                                               .directories[test.directory_index])
 
-                if not (stage is TranspileJakt) {
-                    panic("unreachable: Since clang++ errors and other codes get handled otherwise, only thing that could fail before its expected stage is Jakt to C++.")
+                    mut file = File::open_for_reading(file_to_check)
+                    let error = bytes_to_string(file.read_all())
+
+                    reasons.push( 
+                        TestFailedReason::ErroredAtEarlierStage(
+                            failed_stage: stage.to_string()
+                            error
+                        )
+                    )
                 }
 
-                let file_to_check = format("{}/compile_jakt.err"
-                                           .directories[test.directory_index])
-
-                mut file = File::open_for_reading(file_to_check)
-                let error = bytes_to_string(file.read_all())
-
-                .failed_reasons![test.file_name] = 
-                    TestFailedReason::ErroredAtEarlierStage(
-                        failed_stage: stage.to_string()
-                        error)
-
+                return TestExitedResult::Failed(file: test.file_name)
             }
-            return TestExitedResult::Failed(file: test.file_name)
-        }
 
-        // check the test result
-        let file_to_check = format("{}/{}"
-                            .directories[test.directory_index]
-                            test.result.kind.output_filename())
+            // check the test result
+            let file_to_check = format("{}/{}"
+                                .directories[test.directory_index]
+                                result.kind.output_filename())
+            mut file = File::open_for_reading(file_to_check)
+            let output = file.read_all()
 
+            let expected = result.output
 
-        mut file = File::open_for_reading(file_to_check)
-        let output = file.read_all()
-        let expected = test.result.output
+            let matched_result = match result.kind {
+                Okay => compare_test(bytes: output, expected)
+                RuntimeError | CompileError => compare_error(bytes: output, expected)
+            }
 
-
-        let passed_test = match test.result.kind {
-            Okay => compare_test(bytes: output, expected)
-            RuntimeError | CompileError => compare_error(bytes: output, expected)
-        }
-
-        if not passed_test {
-            if .failed_reasons.has_value() {
-                .failed_reasons![test.file_name] = match test.result.kind {
-                    Okay => 
-                        TestFailedReason::StdoutUnmatched(
-                            had: bytes_to_string(output)
-                            expected)
-                    RuntimeError => 
-                        TestFailedReason::StderrUnmatched(
-                            had: bytes_to_string(output)
-                            expected)
-                    CompileError => 
-                        TestFailedReason::CompilerErrorUnmatched(
-                            had: bytes_to_string(output)
-                            expected)
+            if not matched_result {
+                if .failed_reasons.has_value() {
+                    reasons.push(match result.kind {
+                        Okay => 
+                            TestFailedReason::StdoutUnmatched(
+                                had: bytes_to_string(output)
+                                expected)
+                        RuntimeError => 
+                            TestFailedReason::StderrUnmatched(
+                                had: bytes_to_string(output)
+                                expected)
+                        CompileError => 
+                            TestFailedReason::CompilerErrorUnmatched(
+                                had: bytes_to_string(output)
+                                expected)
+                    })
                 }
             }
+        }
+
+        if .failed_reasons.has_value() and reasons.size() > 0 {
+            .failed_reasons![test.file_name] = reasons
+
             return TestExitedResult::Failed(file: test.file_name)
         }
+
         return TestExitedResult::Passed
     }
 
@@ -568,9 +573,9 @@ struct TestScheduler {
             free_directories.push(i)
         }
 
-        mut failed_reasons: [String:TestFailedReason]? = None
+        mut failed_reasons: [String:[TestFailedReason]]? = None
         if collect_reasons {
-            let dict: [String:TestFailedReason] = [:]
+            let dict: [String:[TestFailedReason]] = [:]
             failed_reasons = dict
         }
 
@@ -697,7 +702,6 @@ function main(args: [String]) {
         }
     }
 
-
     mut skipped_count = 0uz
 
     mut tests: [Test] = []
@@ -707,27 +711,33 @@ function main(args: [String]) {
     for file_name in parsed_options.files.iterator() {
         mut file = File::open_for_reading(file_name)
         let contents = file.read_all()
-        let result = Parser::parse(input: contents)
-        match result {
-            SuccessTest(output) => {
-                tests.push(Test(result: ExpectedResult(kind: ResultKind::Okay, output)
-                                file_name
-                                directory_index: 0))
+        let expected_list = Parser::parse(input: contents)
+
+        if expected_list.size() == 0 {
+            eprintln("[ \x1b[33;1mSKIP\x1b[m ] {}", file_name)
+            skipped_count += 1
+        } else {
+            mut results: [ExpectedResult] = []
+
+            for expected in expected_list.iterator() {
+                match expected {
+                    SuccessTest(output) => {
+                        results.push(ExpectedResult(kind: ResultKind::Okay, output))
+                    }
+                    CompileErrorTest(output) => {
+                        results.push(ExpectedResult(kind: ResultKind::CompileError, output))
+                    }
+                    RuntimeErrorTest(output) => {
+                        results.push(ExpectedResult(kind: ResultKind::RuntimeError, output))
+                    }
+                }
             }
-            CompileErrorTest(output) => {
-                tests.push(Test(result: ExpectedResult(kind: ResultKind::CompileError, output)
-                                file_name
-                                directory_index: 0))
-            }
-            RuntimeErrorTest(output) => {
-                tests.push(Test(result: ExpectedResult(kind: ResultKind::RuntimeError, output)
-                                file_name
-                                directory_index: 0))
-            }
-            SkipTest => {
-                eprintln("[ \x1b[33;1mSKIP\x1b[m ] {}", file_name)
-                skipped_count += 1
-            }
+
+            tests.push(Test(
+                results: results,
+                file_name,
+                directory_index: 0
+            ))
         }
     }
 
@@ -763,6 +773,7 @@ function main(args: [String]) {
     println("==============================")
 
     if run_result.failed_reasons.has_value() and run_result.failed_count > 0 {
+
         eprintln("Showing why tests failed:")
         let reasons = run_result.failed_reasons!
         mut is_first = true
@@ -772,40 +783,43 @@ function main(args: [String]) {
             }
             eprintln("\x1b[1m{}\x1b[m:", file)
             mut output = ""
-            match reasons[file] {
-                CompilerErrorUnmatched(had, expected) => {
-                    output += format("Could not find error \"{}\" in error output:\n", expected)
-                    output += had
-                }
-                ClangError(error) => {
-                    output += "Could not compile generated C++ code into a binary:\n"
-                    output += error
-                }
-                StdoutUnmatched(had, expected) => {
-                    output += "Could not match test stdout:\n"
-                    output += "Expected:\n"
-                    output += expected
-                    output += "\nGot:\n"
-                    output += had
-                }
-                StderrUnmatched(had, expected) => {
-                    output += "Could not match test stderr:\n"
-                    output += "Expected:\n"
-                    output += expected
-                    output += "\nGot:"
-                    output += had
-                }
-                ErroredAtEarlierStage(failed_stage, error) => {
-                    output += "Test failed at an earlier stage than expected:\n"
-                    output +=  failed_stage + " failed with output:\n"
-                    output += error
-                }
-                AbruptExit(exit_code) => {
-                    output += "Test job exited with an unexpected code.\n"
-                    output += format("Exit code: {}", exit_code)
+
+            for reason in reasons[file].iterator() {
+                match reason {
+                    CompilerErrorUnmatched(had, expected) => {
+                        output += format("Could not find error \"{}\" in error output:\n", expected)
+                        output += had
+                    }
+                    ClangError(error) => {
+                        output += "Could not compile generated C++ code into a binary:\n"
+                        output += error
+                    }
+                    StdoutUnmatched(had, expected) => {
+                        output += "Could not match test stdout:\n"
+                        output += "Expected:\n"
+                        output += expected
+                        output += "\nGot:\n"
+                        output += had
+                    }
+                    StderrUnmatched(had, expected) => {
+                        output += "Could not match test stderr:\n"
+                        output += "Expected:\n"
+                        output += expected
+                        output += "\nGot:"
+                        output += had
+                    }
+                    ErroredAtEarlierStage(failed_stage, error) => {
+                        output += "Test failed at an earlier stage than expected:\n"
+                        output +=  failed_stage + " failed with output:\n"
+                        output += error
+                    }
+                    AbruptExit(exit_code) => {
+                        output += "Test job exited with an unexpected code.\n"
+                        output += format("Exit code: {}", exit_code)
+                    }
                 }
             }
-
+            
             for line in output.split('\n').iterator() {
                 eprintln("\x1b[1;0m|\x1b[m\t{}", line)
             }

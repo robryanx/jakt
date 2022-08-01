@@ -1,0 +1,23 @@
+/// Expect:
+/// - output: "3\n2\n"
+
+struct C {
+    public function a(this) => .b()
+    public function b(this) => .c()
+    public function c(this) => 3
+}
+
+function c() => 2
+function b() => c()
+function a() => b()
+
+function main() {
+    let c = C()
+    let e = c.a()
+
+    println("{}", e)
+
+    //let d = a()
+
+    //println("{}", d)
+}

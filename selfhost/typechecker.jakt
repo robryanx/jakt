@@ -4157,15 +4157,16 @@ struct Typechecker {
                     scope_id: import_scope_id
                     name: imported_name.name
                 )
-                    if maybe_struct_id.has_value() {
-                        // NOTE: what should we do if this returns false? error is already created in the struct itself and rust compiler goes on
-                        .add_struct_to_scope(
-                            parent_scope_id: scope_id
-                            name: imported_name.name
-                            struct_id: maybe_struct_id!
-                            span: imported_name.span
-                        )
-                    }
+
+                if maybe_struct_id.has_value() {
+                    // NOTE: what should we do if this returns false? error is already created in the struct itself and rust compiler goes on
+                    .add_struct_to_scope(
+                        parent_scope_id: scope_id
+                        name: imported_name.name
+                        struct_id: maybe_struct_id!
+                        span: imported_name.span
+                    )
+                }
             }
         }
     }
@@ -4302,9 +4303,9 @@ struct Typechecker {
         struct_index = 0
         enum_index = 0
         for parsed_record in parsed_namespace.records.iterator() {
-            let struct_id = StructId(module: .current_module_id, id: struct_index + module_struct_len)
             match parsed_record.record_type {
                 Struct | Class => {
+                    let struct_id = StructId(module: .current_module_id, id: struct_index + module_struct_len)
                     .typecheck_struct_predecl(parsed_record, struct_id, scope_id)
                     struct_index++
                 }
@@ -4396,6 +4397,7 @@ struct Typechecker {
             .add_type_to_scope(scope_id: enum_scope_id, type_name: gen_parameter.name, type_id: parameter_type_id, span: gen_parameter.span)
         }
 
+        mut return_type_resolve: {String} = {}
         for method in parsed_record.methods.iterator() {
             let func = method.parsed_function
             let method_scope_id = .create_scope(
@@ -4508,8 +4510,32 @@ struct Typechecker {
                 span: parsed_record.name_span
             )
 
-            let function_return_type_id = .typecheck_typename(parsed_type: func.return_type, scope_id: method_scope_id, name: None)
+            mut function_return_type_id = .typecheck_typename(parsed_type: func.return_type, scope_id: method_scope_id, name: None)
+            if function_return_type_id.equals(unknown_type_id()) and not func.block.stmts.is_empty() {
+                // If the return type is unknown, and the function starts with a return statement,
+                // we infer the return type from its expression.
+                if func.block.stmts[0] is Return(expr) and expr.has_value() {
+                    let old_ignore_errors = .ignore_errors
+                    .ignore_errors = true
+                    let checked_expr = .typecheck_expression(expr!, scope_id: method_scope_id, safety_mode: SafetyMode::Safe, type_hint: None)
+                    .ignore_errors = old_ignore_errors
+
+                    let return_type = expression_type(checked_expr)
+                    if not return_type.equals(void_type_id()) {
+                        function_return_type_id = return_type
+                    }                    
+                }
+            }
+
+            if function_return_type_id.equals(unknown_type_id()) {
+                return_type_resolve.add(method.parsed_function.name)
+            }
+
             checked_function.return_type_id = function_return_type_id
+        }
+
+        if return_type_resolve.size() > 0 {
+            .resolve_methods_return(resolution_list: return_type_resolve, parent_id: StructOrEnumId::Enum(enum_id))   
         }
     }
 
@@ -4626,6 +4652,7 @@ struct Typechecker {
             .add_type_to_scope(scope_id: struct_scope_id, type_name: gen_parameter.name, type_id: parameter_type_id, span: gen_parameter.span)
         }
 
+        mut return_type_resolve: {String} = {}
         for method in parsed_record.methods.iterator() {
             let func = method.parsed_function
 
@@ -4754,7 +4781,23 @@ struct Typechecker {
                 span: parsed_record.name_span
             )
 
-            let function_return_type_id = .typecheck_typename(parsed_type: func.return_type, scope_id: method_scope_id, name: None)
+            mut function_return_type_id = .typecheck_typename(parsed_type: func.return_type, scope_id: method_scope_id, name: None)
+            if function_return_type_id.equals(unknown_type_id()) and not func.block.stmts.is_empty() {
+                // If the return type is unknown, and the function starts with a return statement,
+                // we infer the return type from its expression.
+                if func.block.stmts[0] is Return(expr) and expr.has_value() {
+                    let old_ignore_errors = .ignore_errors
+                    .ignore_errors = true
+                    let checked_expr = .typecheck_expression(expr!, scope_id: method_scope_id, safety_mode: SafetyMode::Safe, type_hint: None)
+                    .ignore_errors = old_ignore_errors
+
+                    let return_type = expression_type(checked_expr)
+                    if not return_type.equals(void_type_id()) {
+                        function_return_type_id = return_type
+                    }
+                }
+            }
+            
             checked_function.return_type_id = function_return_type_id
 
             if is_generic {
@@ -4768,11 +4811,11 @@ struct Typechecker {
                 .ignore_errors = old_ignore_errors
 
                 mut return_type_id: TypeId = builtin(BuiltinType::Void)
-                if function_return_type_id.equals(unknown_type_id()) {
-                    if not block.statements.is_empty() {
-                        if block.statements.last()! is Return(val) and val.has_value() {
-                            return_type_id = .resolve_type_var(type_var_type_id: expression_type(val!), scope_id: method_scope_id)
-                        }
+                if not function_return_type_id.equals(unknown_type_id()) {
+                    if not block.statements.is_empty() and block.statements.last()! is Return(val) and val.has_value() {
+                        return_type_id = .resolve_type_var(type_var_type_id: expression_type(val!), scope_id: method_scope_id)
+                    } else {
+                        return_type_resolve.add(method.parsed_function.name)
                     }
                 } else {
                     return_type_id = .resolve_type_var(type_var_type_id: function_return_type_id, scope_id)
@@ -4780,10 +4823,16 @@ struct Typechecker {
 
                 checked_function.block = block
                 checked_function.return_type_id = return_type_id
+            } else if function_return_type_id.equals(unknown_type_id()) {
+                return_type_resolve.add(method.parsed_function.name)
             }
 
             module.functions[function_id.id] = checked_function
             .current_function_id = previous_index
+        }
+
+        if return_type_resolve.size() > 0 {
+            .resolve_methods_return(resolution_list: return_type_resolve, parent_id: StructOrEnumId::Struct(struct_id))   
         }
 
         module.structures[struct_id.id].generic_parameters = generic_parameters
@@ -5056,10 +5105,7 @@ struct Typechecker {
 
     function typecheck_enum(mut this, record: ParsedRecord, enum_id: EnumId, parent_scope_id: ScopeId) throws {
         for method in record.methods.iterator() {
-            .typecheck_method(
-                func: method.parsed_function
-                parent_id: StructOrEnumId::Enum(enum_id)
-            )
+            .typecheck_method(func: method.parsed_function, parent_id: StructOrEnumId::Enum(enum_id))
         }
     }
 
@@ -5069,6 +5115,7 @@ struct Typechecker {
     }
 
     function typecheck_struct(mut this, record: ParsedRecord, struct_id: StructId, parent_scope_id: ScopeId) throws {
+        
         let struct_type_id = .find_or_add_type_id(Type::Struct(struct_id))
 
         .current_struct_type_id = struct_type_id
@@ -5076,8 +5123,64 @@ struct Typechecker {
         for method in record.methods.iterator() {
             .typecheck_method(func: method.parsed_function, parent_id: StructOrEnumId::Struct(struct_id))
         }
-
+        
         .current_struct_type_id = None
+    }
+
+    function resolve_methods_return(mut this, mut resolution_list: {String}, parent_id: StructOrEnumId) throws {
+        mut scope_id = .prelude_scope_id()
+
+        match parent_id {
+            Struct(struct_id) => {
+                mut struct_ = .get_struct(struct_id)
+                scope_id = struct_.scope_id
+            }
+            Enum(enum_id) => {
+                let enum_ = .get_enum(enum_id)
+                scope_id = enum_.scope_id
+            }
+        }
+
+        while true {
+            let method_count = resolution_list.size()
+
+            for function_name in resolution_list.iterator() {
+                let method_id = .find_function_in_scope(parent_scope_id: scope_id, function_name)
+                mut checked_function = .get_function(method_id!)
+
+                if .resolve_method_return(checked_function) {
+                    resolution_list.remove(function_name)
+                }
+            }
+
+            if method_count == resolution_list.size() {
+                break
+            }
+        }
+    }
+
+    function resolve_method_return(mut this, mut checked_function: CheckedFunction) throws -> bool {
+        let stmts = checked_function.parsed_function!.block.stmts
+        if not stmts.is_empty() and stmts[0] is Return(expr) and expr.has_value() {
+            let old_ignore_errors = .ignore_errors
+            .ignore_errors = true
+            let checked_expr = .typecheck_expression(expr: expr!, scope_id: checked_function.function_scope_id, safety_mode: SafetyMode::Safe, type_hint: None)
+            .ignore_errors = old_ignore_errors
+            
+            if checked_expr is MethodCall(call) {
+                let inner_method_id = .find_function_in_scope(parent_scope_id: checked_function.function_scope_id, function_name: call.name)
+                if inner_method_id.has_value() {
+                    let inner_checked_function = .get_function(inner_method_id!)
+                    if not inner_checked_function.return_type_id.equals(unknown_type_id()) {
+                        checked_function.return_type_id = inner_checked_function.return_type_id
+
+                        return true
+                    }
+                }
+            }
+        }
+
+        return false
     }
 
     function typecheck_method(mut this, func: ParsedFunction, parent_id: StructOrEnumId) throws {
@@ -5152,7 +5255,6 @@ struct Typechecker {
                 .error("Control reaches end of non-void function", func.name_span)
             }
         }
-
 
         checked_function.block = block
         checked_function.return_type_id = return_type_id
@@ -7704,7 +7806,13 @@ struct Typechecker {
                 }
                 else => {}
             }
-            yield CheckedExpression::EnumVariantArg(expr: checked_expr, arg: checked_binding, enum_variant: checked_enum_variant!, span)
+
+            mut expression = CheckedExpression::Garbage(span)
+            if checked_enum_variant.has_value() {
+                expression = CheckedExpression::EnumVariantArg(expr: checked_expr, arg: checked_binding, enum_variant: checked_enum_variant!, span)
+            }
+            
+            yield expression
         }
         JaktDictionary(values, span) => .typecheck_dictionary(values, span, scope_id, safety_mode, type_hint)
         Set(values, span) => .typecheck_set(values, span, scope_id, safety_mode, type_hint)

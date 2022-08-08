@@ -1,0 +1,15 @@
+/// Expect:
+/// - output: "3\n"
+
+struct C {
+    public function a(this) => .b()
+    public function b(this) => .c()
+    public function c(this) => 3
+}
+
+function main() {
+    let c = C()
+    let e = c.a()
+
+    println("{}", e)
+}

@@ -13,21 +13,6 @@ function todo(anon message: String) {
     abort()
 }
 
-function join(anon strings: [String], separator: String) -> String {
-    mut output = ""
-    
-    mut i = 0uz
-    for s in strings.iterator() {
-        output += s
-        if i < strings.size() - 1 {
-            output += separator
-        }
-        i++
-    }
-
-    return output
-}
-
 function prepend_to_each(anon strings: [String], prefix: String) throws -> [String] {
     mut output: [String] = []
     for str in strings.iterator() {

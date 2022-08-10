@@ -835,7 +835,7 @@ struct CodeGenerator {
                 generic_parameter_names.push(.codegen_type(generic_parameter))
             }
 
-            output += format("template <{}>", join(prepend_to_each(generic_parameter_names, prefix: "typename "), separator: ", "))
+            output += format("template <{}>", prepend_to_each(generic_parameter_names, prefix: "typename ").join(", "))
         }
 
         match struct_.record_type {
@@ -932,7 +932,7 @@ struct CodeGenerator {
                 template_args_array.push("typename " + name)
             }
         }
-        mut template_args = join(template_args_array, separator: ", ")
+        mut template_args = template_args_array.join(", ")
 
         output += format("namespace {}_Details", enum_.name) + " {\n"
         for variant in enum_.variants.iterator() {
@@ -983,7 +983,7 @@ struct CodeGenerator {
                 generic_parameter_names.push(name)
             }
         }
-        mut template_args = join(prepend_to_each(generic_parameter_names, prefix: "typename "), separator: ", ")
+        mut template_args = prepend_to_each(generic_parameter_names, prefix: "typename ").join(", ")
         output += "namespace " + enum_.name + "_Details {\n"
         for variant in enum_.variants.iterator() {
             match variant {
@@ -1014,10 +1014,10 @@ struct CodeGenerator {
                         initializer += format("{}>(member_{}", i, i) + ")}"
                         initializers.push(initializer)
                     }
-                    output += join(generic_typenames, separator: ", ")
+                    output += generic_typenames.join(", ")
                     output += ">\n"
-                    output += name + "(" + join(generic_argument_types, separator: ", ") + "):\n"
-                    output += join(initializers, separator: ",\n") + "\n{}\n"
+                    output += name + "(" + generic_argument_types.join(", ") + "):\n"
+                    output += initializers.join(",\n") + "\n{}\n"
                     output +="};\n"
                 }
                 Typed(name, type_id) => {
@@ -1045,18 +1045,18 @@ struct CodeGenerator {
         for variant in enum_.variants.iterator() {
             mut argument = enum_.name + "_Details::" + variant.name()
             if is_generic {
-                argument += format("<{}>", join(generic_parameter_names, separator: ", "))
+                argument += format("<{}>", generic_parameter_names.join(", "))
             }
             variant_arguments_array.push(argument)
             variant_names.push(variant.name())
         }
-        let variant_args = join(variant_arguments_array, separator: ", ")
+        let variant_args = variant_arguments_array.join(", ")
 
         output += format("struct {} : public Variant<{}>", enum_.name, variant_args)
         if enum_.is_boxed {
             output += format(", public RefCounted<{}", enum_.name)
             if is_generic {
-                output += format("<{}>", join(generic_parameter_names, separator: ", "))
+                output += format("<{}>", generic_parameter_names.join(", "))
             }
             output += ">"
         }
@@ -1067,7 +1067,7 @@ struct CodeGenerator {
             output += "    using " +  name + " = " + enum_.name + "_Details::" + name
             if is_generic {
                 output += "<"
-                output += join(generic_parameter_names, separator: ", ")
+                output += generic_parameter_names.join(", ")
                 output += ">"
             }
             output += ";\n"
@@ -1076,7 +1076,7 @@ struct CodeGenerator {
         if enum_.is_boxed {
             mut fully_instantiated_name = enum_.name
             if is_generic {
-                fully_instantiated_name += format("<{}>", join(generic_parameter_names, separator: ", "))
+                fully_instantiated_name += format("<{}>", generic_parameter_names.join(", "))
             }
             output += "template<typename V, typename... Args> static auto create(Args&&... args) {\n"
             output += format("return adopt_nonnull_ref_or_enomem(new (nothrow) {}(V(forward<Args>(args)...)));\n", fully_instantiated_name)
@@ -1199,8 +1199,8 @@ struct CodeGenerator {
     function codegen_ak_formatter(mut this, name: String, generic_parameter_names: [String]) throws -> String {
         mut output = ""
 
-        let template_args = join(prepend_to_each(generic_parameter_names, prefix: "typename "), separator: ", ")
-        let generic_type_args = join(generic_parameter_names, separator: ", ")
+        let template_args = prepend_to_each(generic_parameter_names, prefix: "typename ").join(", ")
+        let generic_type_args = generic_parameter_names.join(", ")
 
         mut qualified_name = ""
         for namespace_ in .namespace_stack.iterator() {
@@ -1563,7 +1563,7 @@ struct CodeGenerator {
                 true => format("ErrorOr<{}>", .codegen_type(return_type_id))
                 else => .codegen_type(return_type_id)
             }
-            yield format("[{}]({}) -> {} {}", join(generated_captures, separator: ", "), join(generated_params, separator: ", "), return_type, .codegen_block(block))
+            yield format("[{}]({}) -> {} {}", generated_captures.join(", "), generated_params.join(", "), return_type, .codegen_block(block))
         }
         TryBlock(stmt, error_name, catch_block, span) => {
             mut output = ""
@@ -2346,7 +2346,7 @@ struct CodeGenerator {
                     for gen_param in generic_parameters.iterator() {
                         types.push(.codegen_type_possibly_as_namespace(type_id: gen_param, as_namespace: false))
                     }
-                    output += format("<{}>", join(types, separator: ", "))
+                    output += format("<{}>", types.join(", "))
                 }
 
                 mut arguments: [String] = []
@@ -2354,7 +2354,7 @@ struct CodeGenerator {
                     arguments.push(.codegen_expression(arg.1))
                 }
 
-                output += format("({})", join(arguments, separator: ","))
+                output += format("({})", arguments.join(","))
             }
         }
 

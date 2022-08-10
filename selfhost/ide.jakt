@@ -951,7 +951,7 @@ function get_type_signature(program: CheckedProgram, type_id: TypeId) throws -> 
 
             let return_type = program.type_name(return_type_id)
 
-            yield format("function({}) -> {}", join(param_names, separator: ", "), return_type)
+            yield format("function({}) -> {}", param_names.join(", "), return_type)
         }
         RawPtr(type_id) => "raw " + get_type_signature(program, type_id)
         Enum(id) => {

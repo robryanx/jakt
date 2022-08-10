@@ -1299,7 +1299,7 @@ class CheckedProgram {
 
                 let return_type = .type_name(return_type_id)
 
-                yield format("function({}) -> {}", join(param_names, separator: ", "), return_type)
+                yield format("function({}) -> {}", param_names.join(", "), return_type)
             }
             Enum(id) => .get_enum(id).name
             Struct(id) => .get_struct(id).name
@@ -8250,7 +8250,7 @@ struct Typechecker {
                                                     .error_with_hint(
                                                         format("Match case argument '{}' for struct-like enum variant cannot be anon", arg.binding)
                                                         arg.span
-                                                        format("Available arguments are: {}\n", join(unused_field_names, separator: ", "))
+                                                        format("Available arguments are: {}\n", unused_field_names.join(", "))
                                                         arg.span
                                                     )
                                                     continue
@@ -8369,17 +8369,7 @@ struct Typechecker {
 
                 if missing_variants.size() > 0 {
                     if not seen_catch_all {
-                        mut str_missing_values = StringBuilder::create()
-
-                        // FIXME: replace this block with missing_variants.join(", ") when it is available
-                        for i in 0..missing_variants.size() {
-                            str_missing_values.append_c_string(missing_variants[i].c_string())
-                            if i < missing_variants.size() - 1 {
-                                str_missing_values.append_c_string(", ".c_string())
-                            }
-                        }
-
-                        .error(format("match expression is not exhaustive, missing variants are: {}", str_missing_values.to_string()), span)
+                        .error(format("match expression is not exhaustive, missing variants are: {}", missing_variants.join(", ")), span)
                     }
                 } else {
                     if seen_catch_all {
@@ -8710,7 +8700,7 @@ struct Typechecker {
                 continue
             }
 
-            .error(format("Not a namespace, enum, class, or struct: ‘{}’", join(call.namespace_, separator: "::")), span)
+            .error(format("Not a namespace, enum, class, or struct: ‘{}’", call.namespace_.join("::")), span)
         }
 
         // 1. Look for a function with this name.

@@ -272,6 +272,8 @@ public:
         return array;
     }
 
+    ErrorOr<String> join(String const& separator) const;
+
     bool is_empty() const { return m_storage->is_empty(); }
     size_t size() const { return m_storage->size(); }
     size_t capacity() const { return m_storage->capacity(); }

@@ -22,6 +22,7 @@ extern struct Array<T> {
     function iterator(this) -> ArrayIterator<T>
     function first(this) -> T?
     function last(this) -> T?
+    function join(this, anon s: String) throws -> String
 }
 
 extern struct ArraySlice<T> {

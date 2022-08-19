@@ -3717,6 +3717,7 @@ struct Typechecker {
         if .inside_defer {
             .error("‘return’ is not allowed inside ‘defer’", span)
         }
+        
         if not expr.has_value() {
             return CheckedStatement::Return(val: None, span)
         }
@@ -3730,7 +3731,24 @@ struct Typechecker {
             type_hint = Some(.get_function(.current_function_id!).return_type_id)
         }
 
-        let checked_expr = .typecheck_expression(expr!, scope_id, safety_mode, type_hint)
+        mut checked_expr = .typecheck_expression(expr!, scope_id, safety_mode, type_hint)
+        
+        if .current_function_id.has_value() {
+            let promoted_expr = .try_to_promote_constant_expr_to_type(lhs_type: .get_function(.current_function_id!).return_type_id, checked_rhs: checked_expr, span)
+            if promoted_expr.has_value() {
+                checked_expr = promoted_expr!
+            }
+
+            mut generic_inferences: [String: String] = [:]
+
+            .check_types_for_compat(
+                lhs_type_id: .get_function(.current_function_id!).return_type_id
+                rhs_type_id: checked_expr.type()
+                &mut generic_inferences // FIXME: use correct generic inferences
+                span: span
+            )
+        }
+
         return CheckedStatement::Return(val: checked_expr, span)
     }
 

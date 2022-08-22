@@ -52,6 +52,14 @@ struct Span {
     function contains(this, span: Span) -> bool {
         return .file_id.equals(span.file_id) and span.start >= .start and span.end <= .end
     }
+
+    function empty() -> Span {
+        return Span(
+            file_id: FileId(id: 0uz),
+            start: 0,
+            end: 0
+        )
+    }
 }
 
 struct FileId {

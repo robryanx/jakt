@@ -2753,6 +2753,15 @@ struct Typechecker {
 
                 return type_id
             }
+            ArraySlice(inner, span) => {
+                let inner_type_id = .typecheck_typename(parsed_type: inner, scope_id, name)
+
+                let array_struct_id = .find_struct_in_prelude("ArraySlice")
+
+                let type_id = .find_or_add_type_id(Type::GenericInstance(id: array_struct_id, args: [inner_type_id]))
+
+                return type_id
+            }
             Dictionary(key, value, span) => {
                 let key_type_id = .typecheck_typename(parsed_type: key, scope_id, name)
                 let value_type_id = .typecheck_typename(parsed_type: value, scope_id, name)

@@ -651,32 +651,32 @@ boxed enum ParsedExpression {
     Garbage(Span)
 
     function span(this) => match this {
-        Boolean(val, span) => span
-        NumericConstant(val, span) => span
-        QuotedString(val, span) => span
-        SingleQuotedString(val, span) => span
-        SingleQuotedByteString(val, span) => span
-        Call(call, span) => span
-        Var(name, span) => span
-        IndexedExpression(base, index, span) => span
-        UnaryOp(expr, op, span) => span
-        BinaryOp(lhs, op, rhs, span) => span
-        Operator(op, span) => span
-        OptionalSome(expr, span) => span
+        Boolean(span) => span
+        NumericConstant(span) => span
+        QuotedString(span) => span
+        SingleQuotedString(span) => span
+        SingleQuotedByteString(span) => span
+        Call(span) => span
+        Var(span) => span
+        IndexedExpression(span) => span
+        UnaryOp(span) => span
+        BinaryOp(span) => span
+        Operator(span) => span
+        OptionalSome(span) => span
         OptionalNone(span) => span
-        JaktArray(values, fill_size, span) => span
-        JaktDictionary(values, span) => span
+        JaktArray(span) => span
+        JaktDictionary(span) => span
         Set(span) => span
-        JaktTuple(values, span) => span
-        Range(from, to, span) => span
-        ForcedUnwrap(expr, span) => span
+        JaktTuple(span) => span
+        Range(span) => span
+        ForcedUnwrap(span) => span
         Garbage(span) => span
-        MethodCall(expr, call, span) => span
-        Match(expr, cases, span) => span
+        MethodCall(span) => span
+        Match(span) => span
         EnumVariantArg(span) => span
-        IndexedTuple(expr, index, span) => span
-        IndexedStruct(expr, field, span) => span
-        NamespacedVar(name, namespace_, span) => span
+        IndexedTuple(span) => span
+        IndexedStruct(span) => span
+        NamespacedVar(span) => span
         Function(span) => span
         Try(span) => span
         TryBlock(span) => span
@@ -991,6 +991,7 @@ boxed enum ParsedType {
     NamespacedName(name: String, namespaces: [String], params: [ParsedType], span: Span)
     GenericType(name: String, generic_parameters: [ParsedType], span: Span), // FIXME: tuple should be dictionary
     JaktArray(inner: ParsedType, span: Span)
+    ArraySlice(inner: ParsedType, span: Span)
     Dictionary(key: ParsedType, value: ParsedType, span: Span)
     JaktTuple(types: [ParsedType], span: Span)
     Set(inner: ParsedType, span: Span)
@@ -1003,20 +1004,21 @@ boxed enum ParsedType {
     Empty
 
     function span(this) => match this {
-        Name(name, span) => span
-        NamespacedName(name, namespaces, params, span) => span
-        GenericType(name, generic_parameters, span) => span
-        JaktArray(inner, span) => span
-        Dictionary(key, value, span) => span
-        JaktTuple(types, span) => span
-        Set(inner, span) => span
-        Optional(inner, span) => span
+        Name(span) => span
+        NamespacedName(span) => span
+        GenericType(span) => span
+        JaktArray(span) => span
+        ArraySlice(span) => span
+        Dictionary(span) => span
+        JaktTuple(span) => span
+        Set(span) => span
+        Optional(span) => span
         Reference(span) => span
         MutableReference(span) => span
-        RawPtr(inner, span) => span
-        WeakPtr(inner, span) => span
+        RawPtr(span) => span
+        WeakPtr(span) => span
         Function(span) => span
-        Empty => Span(file_id: FileId(id: 0uz), start: 0, end: 0) // FIXME: For some reason we can't see `empty_span()` here.
+        Empty => Span::empty()
     }
 }
 
@@ -2317,24 +2319,34 @@ struct Parser {
 
     function parse_type_shorthand_array_or_dictionary(mut this) throws -> ParsedType {
         // [T] is shorthand for Array<T>
+        // [T..] is shorthand for ArraySlice<T>
         // [K:V] is shorthand for Dictionary<K, V>
         let start = .current().span()
         .index++
         let inner = .parse_typename()
-        if .current() is RSquare {
+        if .current() is DotDot {
             .index++
-            return ParsedType::JaktArray(inner, span: merge_spans(start, .previous().span()))
-        }
-        if .current() is Colon {
-            .index++
-            let value = .parse_typename()
             if .current() is RSquare {
                 .index++
-            } else {
-                .error("Expected ']'", .current().span())
+                return ParsedType::ArraySlice(inner, span: merge_spans(start, .previous().span()))
             }
-            return ParsedType::Dictionary(key: inner, value, span: merge_spans(start, .current().span()))
+        } else {
+            if .current() is RSquare {
+                .index++
+                return ParsedType::JaktArray(inner, span: merge_spans(start, .previous().span()))
+            }
+            if .current() is Colon {
+                .index++
+                let value = .parse_typename()
+                if .current() is RSquare {
+                    .index++
+                } else {
+                    .error("Expected ']'", .current().span())
+                }
+                return ParsedType::Dictionary(key: inner, value, span: merge_spans(start, .current().span()))
+            }
         }
+
         .error("Expected shorthand type", .current().span())
         return ParsedType::Empty
     }

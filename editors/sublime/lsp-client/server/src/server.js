@@ -20,15 +20,15 @@ const tmp = require("tmp");
 const path = require("path");
 const util = require("node:util");
 const node_util_1 = require("node:util");
+const node_url_1 = require("node:url");
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const exec = util.promisify(require('node:child_process').exec);
+const exec = util.promisify(require("node:child_process").exec);
 const tmpFile = tmp.fileSync();
 function includeFlagForPath(file_path) {
-    const protocol_end = file_path.indexOf("://");
-    if (protocol_end == -1)
-        return " -I " + file_path;
-    // Not protocol.length + 3, include the last '/'
-    return " -I " + path.dirname(file_path.slice(protocol_end + 2));
+    if (file_path.startsWith("file://")) {
+        return " -I " + path.dirname((0, node_url_1.fileURLToPath)(file_path));
+    }
+    return " -I " + file_path;
 }
 connection.onInitialize((params) => {
     const capabilities = params.capabilities;
@@ -45,21 +45,22 @@ connection.onInitialize((params) => {
             // Tell the client that this server doesn't support code completion. (yet)
             completionProvider: {
                 resolveProvider: false,
-                triggerCharacters: ['.']
+                triggerCharacters: ["."],
             },
             inlayHintProvider: {
-                resolveProvider: false
+                resolveProvider: false,
             },
             definitionProvider: true,
             typeDefinitionProvider: true,
             hoverProvider: true,
-        }
+            documentFormattingProvider: true,
+        },
     };
     if (hasWorkspaceFolderCapability) {
         result.capabilities.workspace = {
             workspaceFolders: {
-                supported: true
-            }
+                supported: true,
+            },
         };
     }
     // connection.console.log('Jakt language server initialized');
@@ -72,34 +73,36 @@ connection.onInitialized(() => {
     }
     if (hasWorkspaceFolderCapability) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        connection.workspace.onDidChangeWorkspaceFolders(_event => {
+        connection.workspace.onDidChangeWorkspaceFolders((_event) => {
             // connection.console.log('Workspace folder change event received.');
         });
     }
 });
 async function goToDefinition(document, jaktOutput) {
-    const lines = jaktOutput.split('\n').filter(l => l.length > 0);
+    const lines = jaktOutput.split("\n").filter((l) => l.length > 0);
     for (const line of lines) {
         const obj = JSON.parse(line);
         // connection.console.log("going to type definition");
         // connection.console.log(obj);
-        if (obj.file === '')
+        if (obj.file === "" || obj.file === "__prelude__")
             return;
-        const lineBreaks = findLineBreaks(obj.file ? (await fs.promises.readFile(obj.file)).toString() : document.getText() ?? "");
+        const lineBreaks = findLineBreaks(obj.file
+            ? (await fs.promises.readFile(obj.file)).toString()
+            : document.getText() ?? "");
         const uri = obj.file ? "file:/" + obj.file : document.uri;
         // connection.console.log(uri);
-        console.timeEnd('onDefinition');
+        console.timeEnd("onDefinition");
         return {
             uri: uri,
             range: {
                 start: convertSpan(obj.start, lineBreaks),
                 end: convertSpan(obj.end, lineBreaks),
-            }
+            },
         };
     }
 }
 connection.onDefinition(async (request) => {
-    console.time('onDefinition');
+    console.time("onDefinition");
     const document = documents.get(request.textDocument.uri);
     if (!document)
         return;
@@ -108,11 +111,13 @@ connection.onDefinition(async (request) => {
     // connection.console.log("request: ");
     // connection.console.log(request.textDocument.uri);
     // connection.console.log("index: " + convertPosition(request.position, text));
-    const stdout = await runCompiler(text, "-g " + convertPosition(request.position, text) + includeFlagForPath(request.textDocument.uri), settings);
+    const stdout = await runCompiler(text, "-g " +
+        convertPosition(request.position, text) +
+        includeFlagForPath(request.textDocument.uri), settings);
     return goToDefinition(document, stdout);
 });
 connection.onTypeDefinition(async (request) => {
-    console.time('onTypeDefinition');
+    console.time("onTypeDefinition");
     const document = documents.get(request.textDocument.uri);
     if (!document)
         return;
@@ -121,11 +126,13 @@ connection.onTypeDefinition(async (request) => {
     // connection.console.log("request: ");
     // connection.console.log(request.textDocument.uri);
     // connection.console.log("index: " + convertPosition(request.position, text));
-    const stdout = await runCompiler(text, "-t " + convertPosition(request.position, text) + includeFlagForPath(request.textDocument.uri), settings);
+    const stdout = await runCompiler(text, "-t " +
+        convertPosition(request.position, text) +
+        includeFlagForPath(request.textDocument.uri), settings);
     return goToDefinition(document, stdout);
 });
 connection.onHover(async (request) => {
-    console.time('onHover');
+    console.time("onHover");
     const document = documents.get(request.textDocument.uri);
     const settings = await getDocumentSettings(request.textDocument.uri);
     const text = document?.getText();
@@ -133,9 +140,11 @@ connection.onHover(async (request) => {
         // connection.console.log("request: ");
         // connection.console.log(request.textDocument.uri);
         // connection.console.log("index: " + convertPosition(request.position, text));
-        const stdout = await runCompiler(text, "-e " + convertPosition(request.position, text) + includeFlagForPath(request.textDocument.uri), settings);
+        const stdout = await runCompiler(text, "-e " +
+            convertPosition(request.position, text) +
+            includeFlagForPath(request.textDocument.uri), settings);
         // connection.console.log("got: " + stdout);
-        const lines = stdout.split('\n').filter(l => l.length > 0);
+        const lines = stdout.split("\n").filter((l) => l.length > 0);
         for (const line of lines) {
             const obj = JSON.parse(line);
             // connection.console.log("hovering");
@@ -144,25 +153,30 @@ connection.onHover(async (request) => {
             // getting runtime import errors to remove this deprication warning.
             const contents = {
                 value: obj.hover,
-                language: 'jakt'
+                language: "jakt",
             };
             if (obj.hover != "") {
-                console.timeEnd('onHover');
+                console.timeEnd("onHover");
                 return { contents };
             }
         }
     }
-    console.timeEnd('onHover');
+    console.timeEnd("onHover");
     return null;
 });
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
 // Please note that this is not the case when using this server with the client provided in this example
 // but could happen with other clients.
-const defaultSettings = { maxNumberOfProblems: 1000, compiler: { executablePath: "jakt" } };
+const defaultSettings = {
+    maxNumberOfProblems: 1000,
+    maxCompilerInvocationTime: 5000,
+    compiler: { executablePath: "jakt" },
+    hints: { showImplicitTry: true, showInferredTypes: true },
+};
 let globalSettings = defaultSettings;
 // Cache the settings of all open documents
 const documentSettings = new Map();
-connection.onDidChangeConfiguration(change => {
+connection.onDidChangeConfiguration((change) => {
     // connection.console.log("onDidChangeConfiguration, hasConfigurationCapability: " + hasConfigurationCapability);
     // connection.console.log("change is " + JSON.stringify(change));
     if (hasConfigurationCapability) {
@@ -184,14 +198,14 @@ function getDocumentSettings(resource) {
     if (!result) {
         result = connection.workspace.getConfiguration({
             scopeUri: resource,
-            section: 'jaktLanguageServer'
+            section: "jaktLanguageServer",
         });
         documentSettings.set(resource, result);
     }
     return result;
 }
 // Only keep settings for open documents
-documents.onDidClose(e => {
+documents.onDidClose((e) => {
     documentSettings.delete(e.document.uri);
 });
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -248,7 +262,7 @@ function lowerBoundBinarySearch(arr, num) {
 }
 function convertSpan(utf8_offset, lineBreaks) {
     const lineBreakIndex = lowerBoundBinarySearch(lineBreaks, utf8_offset);
-    const start_of_line_offset = lineBreakIndex == -1 ? 0 : (lineBreaks[lineBreakIndex] + 1);
+    const start_of_line_offset = lineBreakIndex == -1 ? 0 : lineBreaks[lineBreakIndex] + 1;
     const character = utf8_offset - start_of_line_offset;
     return { line: lineBreakIndex + 1, character };
 }
@@ -261,7 +275,7 @@ function convertPosition(position, text) {
         if (line == position.line && character == position.character) {
             return i;
         }
-        if (buffer.at(i) == 0x0A) {
+        if (buffer.at(i) == 0x0a) {
             line++;
             character = 0;
         }
@@ -282,7 +296,9 @@ async function runCompiler(text, flags, settings) {
     }
     let stdout;
     try {
-        const output = await exec(`${settings.compiler.executablePath} ${flags} ${tmpFile.name}`);
+        const output = await exec(`${settings.compiler.executablePath} ${flags} ${tmpFile.name}`, {
+            timeout: settings.maxCompilerInvocationTime,
+        });
         // // connection.console.log(output);
         stdout = output.stdout;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -310,9 +326,9 @@ function findLineBreaks(utf16_text) {
     return lineBreaks;
 }
 async function validateTextDocument(textDocument) {
-    console.time('validateTextDocument');
+    console.time("validateTextDocument");
     if (!hasDiagnosticRelatedInformationCapability) {
-        console.error('Trying to validate a document with no diagnostic capability');
+        console.error("Trying to validate a document with no diagnostic capability");
         return;
     }
     // // In this simple example we get the settings for every validate run.
@@ -320,13 +336,13 @@ async function validateTextDocument(textDocument) {
     // The validator creates diagnostics for all uppercase words length 2 and more
     const text = textDocument.getText();
     const lineBreaks = findLineBreaks(text);
+    const stdout = await runCompiler(text, "-c --type-hints --try-hints -j" + includeFlagForPath(textDocument.uri), settings);
     textDocument.jaktInlayHints = [];
-    const stdout = await runCompiler(text, "-c -H -j" + includeFlagForPath(textDocument.uri), settings);
     const diagnostics = [];
     // FIXME: We use this to deduplicate type hints given by the compiler.
     //        It'd be nicer if it didn't give duplicate hints in the first place.
     const seenTypeHintPositions = new Set();
-    const lines = stdout.split('\n').filter(l => l.length > 0);
+    const lines = stdout.split("\n").filter((l) => l.length > 0);
     for (const line of lines) {
         // connection.console.log(line);
         try {
@@ -357,19 +373,28 @@ async function validateTextDocument(textDocument) {
                     severity,
                     range: {
                         start: position_start,
-                        end: position_end
+                        end: position_end,
                     },
                     message: obj.message,
-                    source: textDocument.uri
+                    source: textDocument.uri,
                 };
                 // connection.console.log(diagnostic.message);
                 diagnostics.push(diagnostic);
             }
-            else if (obj.type == "hint") {
+            else if (obj.type == "hint" && settings.hints.showInferredTypes) {
                 if (!seenTypeHintPositions.has(obj.position)) {
                     seenTypeHintPositions.add(obj.position);
                     const position = convertSpan(obj.position, lineBreaks);
                     const hint_string = ": " + obj.typename;
+                    const hint = vscode_languageserver_protocol_1.InlayHint.create(position, [vscode_languageserver_protocol_1.InlayHintLabelPart.create(hint_string)], vscode_languageserver_protocol_1.InlayHintKind.Type);
+                    textDocument.jaktInlayHints.push(hint);
+                }
+            }
+            else if (obj.type == "try" && settings.hints.showImplicitTry) {
+                if (!seenTypeHintPositions.has(obj.position)) {
+                    seenTypeHintPositions.add(obj.position);
+                    const position = convertSpan(obj.position, lineBreaks);
+                    const hint_string = "try ";
                     const hint = vscode_languageserver_protocol_1.InlayHint.create(position, [vscode_languageserver_protocol_1.InlayHintLabelPart.create(hint_string)], vscode_languageserver_protocol_1.InlayHintKind.Type);
                     textDocument.jaktInlayHints.push(hint);
                 }
@@ -381,16 +406,16 @@ async function validateTextDocument(textDocument) {
     }
     // Send the computed diagnostics to VSCode.
     connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
-    console.timeEnd('validateTextDocument');
+    console.timeEnd("validateTextDocument");
 }
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-connection.onDidChangeWatchedFiles(_change => {
+connection.onDidChangeWatchedFiles((_change) => {
     // Monitored files have change in VSCode
-    connection.console.log('We received an file change event');
+    connection.console.log("We received an file change event");
 });
 // This handler provides the initial list of the completion items.
 connection.onCompletion(async (request) => {
-    console.time('onCompletion');
+    console.time("onCompletion");
     // The pass parameter contains the position of the text document in
     // which code complete got requested. For the example we ignore this
     // info and always provide the same completion items.
@@ -404,7 +429,7 @@ connection.onCompletion(async (request) => {
         // connection.console.log("index: " + index);
         const stdout = await runCompiler(text, "-m " + index + includeFlagForPath(request.textDocument.uri), settings);
         // connection.console.log("got: " + stdout);
-        const lines = stdout.split('\n').filter(l => l.length > 0);
+        const lines = stdout.split("\n").filter((l) => l.length > 0);
         for (const line of lines) {
             const obj = JSON.parse(line);
             // connection.console.log("completions");
@@ -414,28 +439,52 @@ connection.onCompletion(async (request) => {
             for (const completion of obj.completions) {
                 output.push({
                     label: completion,
-                    kind: completion.includes('(') ? node_1.CompletionItemKind.Function : node_1.CompletionItemKind.Field,
+                    kind: completion.includes("(")
+                        ? node_1.CompletionItemKind.Function
+                        : node_1.CompletionItemKind.Field,
                     data: index,
                 });
                 index++;
             }
-            console.timeEnd('onCompletion');
+            console.timeEnd("onCompletion");
             return output;
         }
     }
-    console.timeEnd('onCompletion');
+    console.timeEnd("onCompletion");
+    return [];
+});
+connection.onDocumentFormatting(async (params) => {
+    console.time("onDocumentFormatting");
+    const document = documents.get(params.textDocument.uri);
+    const settings = await getDocumentSettings(params.textDocument.uri);
+    const text = document?.getText();
+    if (typeof text == "string") {
+        const stdout = await runCompiler(text, "-f " + includeFlagForPath(params.textDocument.uri), settings);
+        const formatted = stdout;
+        console.timeEnd("onDocumentFormatting");
+        return [
+            {
+                range: {
+                    start: { line: 0, character: 0 },
+                    end: { line: document.lineCount, character: 0 },
+                },
+                newText: formatted,
+            },
+        ];
+    }
+    console.timeEnd("onDocumentFormatting");
     return [];
 });
 // This handler resolves additional information for the item selected in
 // the completion list.
 connection.onCompletionResolve((item) => {
     if (item.data === 1) {
-        item.detail = 'TypeScript details';
-        item.documentation = 'TypeScript documentation';
+        item.detail = "TypeScript details";
+        item.documentation = "TypeScript documentation";
     }
     else if (item.data === 2) {
-        item.detail = 'JavaScript details';
-        item.documentation = 'JavaScript documentation';
+        item.detail = "JavaScript details";
+        item.documentation = "JavaScript documentation";
     }
     return item;
 });

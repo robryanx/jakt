@@ -231,7 +231,6 @@ function usize_from_ascii_digits(anon digits: String) -> usize? {
         value = value * 10 + digit!
     }
 
-
     return value
 }
 
@@ -243,6 +242,7 @@ struct Options {
     job_count: usize
     help_wanted: bool
     build_dir: String
+    format_dir: bool
 
     function from_args(args: [String]) throws -> Options {
         let files: [String] = []
@@ -255,10 +255,17 @@ struct Options {
             job_count: 0
             help_wanted: false
             build_dir: "build"
+            format_dir: false
         )
 
         mut index = 1uz
         while index != args.size() {
+            if args[index] == "-f" {
+                options.format_dir = true
+                index++
+                continue
+            }
+
             if args[index] == "-h" {
                 // end processing here since the user wants some help
                 options.help_wanted = true
@@ -677,6 +684,15 @@ function main(args: [String]) {
         }
         print_usage()
         return 1
+    }
+
+    if parsed_options.format_dir {
+        for file_name in parsed_options.files.iterator() {
+            println("{}", file_name)
+            system(format("jakt -f {} > /tmp/format && cp /tmp/format {}", file_name, file_name).c_string())
+        }
+
+        return 0
     }
 
     mut skipped_count = 0uz

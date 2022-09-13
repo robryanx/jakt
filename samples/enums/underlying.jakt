@@ -13,14 +13,14 @@ enum CuterLittlerEnum: u32 {
     C
 }
 
-function main() throws -> c_int {
+function main() {
     println("A = {}, B = {}, C = {}",
-        CuteLittleEnum::A as! u64,
-        CuteLittleEnum::B as! u64,
-        CuteLittleEnum::C as! u64)
+        CuteLittleEnum::A,
+        CuteLittleEnum::B,
+        CuteLittleEnum::C)
+
     println("A = {}, B = {}, C = {}",
-        CuterLittlerEnum::A as! u32,
-        CuterLittlerEnum::B as! u32,
-        CuterLittlerEnum::C as! u32)
-    return 0
+        CuterLittlerEnum::A,
+        CuterLittlerEnum::B,
+        CuterLittlerEnum::C)
 }

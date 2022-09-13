@@ -985,7 +985,12 @@ struct CodeGenerator {
                         }
                     }
                 }
-                return output + "};\n"
+
+                output += "};\n"
+
+                .deferred_output += .codegen_ak_enum_formatter(enum_name: enum_.name, underlying_type_id: enum_.underlying_type_id)
+
+                return output
             } else {
                 todo("Enums with a non-integer underlying type")
             }
@@ -1209,6 +1214,17 @@ struct CodeGenerator {
         }
 
         output += "}\nreturn builder.to_string();\n}"
+
+        return output
+    }
+
+    function codegen_ak_enum_formatter(mut this, enum_name: String, underlying_type_id: TypeId) throws -> String {
+        mut output = "template<>\n"
+        output += format("struct Formatter<{}> : public Formatter<UnderlyingType<{}>> {{", enum_name, enum_name)
+        output += format("ErrorOr<void> format(FormatBuilder& builder, {} const& value) {{", enum_name)
+        output += "JaktInternal::PrettyPrint::ScopedEnable pretty_print_enable { m_alternative_form };"
+        output += format("ErrorOr<void> format_error = Formatter<UnderlyingType<{}>>::format(builder, static_cast<{}>(value));", enum_name, .codegen_type(underlying_type_id))
+        output += "return format_error; }};"
 
         return output
     }

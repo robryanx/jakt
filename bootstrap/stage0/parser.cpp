@@ -37,10 +37,12 @@ ErrorOr<String> parser::EnumVariantPatternArgument::debug_description() const { 
 JaktInternal::PrettyPrint::ScopedLevelIncrease increase_indent {};
 TRY(JaktInternal::PrettyPrint::output_indentation(builder));TRY(builder.append("name: "));TRY(builder.appendff("{}, ", name));
 TRY(JaktInternal::PrettyPrint::output_indentation(builder));TRY(builder.append("binding: "));TRY(builder.appendff("\"{}\", ", binding));
-TRY(JaktInternal::PrettyPrint::output_indentation(builder));TRY(builder.append("span: "));TRY(builder.appendff("{}", span));
+TRY(JaktInternal::PrettyPrint::output_indentation(builder));TRY(builder.append("span: "));TRY(builder.appendff("{}, ", span));
+TRY(JaktInternal::PrettyPrint::output_indentation(builder));TRY(builder.append("is_reference: "));TRY(builder.appendff("{}, ", is_reference));
+TRY(JaktInternal::PrettyPrint::output_indentation(builder));TRY(builder.append("is_mutable: "));TRY(builder.appendff("{}", is_mutable));
 }
 TRY(builder.append(")"));return builder.to_string(); }
-parser::EnumVariantPatternArgument::EnumVariantPatternArgument(JaktInternal::Optional<String> a_name, String a_binding, utility::Span a_span) :name(a_name), binding(a_binding), span(a_span){}
+parser::EnumVariantPatternArgument::EnumVariantPatternArgument(JaktInternal::Optional<String> a_name, String a_binding, utility::Span a_span, bool a_is_reference, bool a_is_mutable) :name(a_name), binding(a_binding), span(a_span), is_reference(a_is_reference), is_mutable(a_is_mutable){}
 
 bool parser::EnumVariantPatternArgument::equals(parser::EnumVariantPatternArgument const rhs_variant_pattern_argument) const {
 {
@@ -49,6 +51,12 @@ return (false);
 }
 if ((((((*this).name)).has_value()) && ((((rhs_variant_pattern_argument).name)).has_value()))){
 return (((((*this).name).value()) == (((rhs_variant_pattern_argument).name).value())));
+}
+if ((((*this).is_reference) != ((rhs_variant_pattern_argument).is_reference))){
+return (false);
+}
+if ((((*this).is_mutable) != ((rhs_variant_pattern_argument).is_mutable))){
+return (false);
 }
 return (((!(((((*this).name)).has_value()))) && (!(((((rhs_variant_pattern_argument).name)).has_value())))));
 }
@@ -99,7 +107,7 @@ break;
 NonnullRefPtr<parser::ParsedStatement> stmt = (_magic_value.value());
 {
 if (((stmt)->index() == 14 /* Yield */)){
-NonnullRefPtr<parser::ParsedExpression> const expr = (stmt->get<parser::ParsedStatement::Yield>()).expr;
+NonnullRefPtr<parser::ParsedExpression> const expr = ((stmt)->get<parser::ParsedStatement::Yield>()).expr;
 return (((expr)->span()));
 }
 }
@@ -153,7 +161,7 @@ break;
 NonnullRefPtr<parser::ParsedStatement> stmt = (_magic_value.value());
 {
 if (((stmt)->index() == 14 /* Yield */)){
-NonnullRefPtr<parser::ParsedExpression> const expr = (stmt->get<parser::ParsedStatement::Yield>()).expr;
+NonnullRefPtr<parser::ParsedExpression> const expr = ((stmt)->get<parser::ParsedStatement::Yield>()).expr;
 return (((stmt)->span()));
 }
 }
@@ -985,7 +993,7 @@ __jakt_label_20:; __jakt_var_22.release_value(); }));
 ErrorOr<String> parser::Parser::parse_argument_label() {
 {
 if ((((((*this).peek(static_cast<size_t>(1ULL)))).index() == 6 /* Colon */) && ((((*this).current())).index() == 4 /* Identifier */))){
-String const name = (((*this).current()).get<lexer::Token::Identifier>()).name;
+String const name = ((((*this).current())).get<lexer::Token::Identifier>()).name;
 ({auto& _jakt_ref = ((*this).index);_jakt_ref = JaktInternal::checked_add<size_t>(_jakt_ref, static_cast<size_t>(2ULL));});
 return (name);
 }
@@ -1015,8 +1023,8 @@ ErrorOr<parser::ParsedTrait> parser::Parser::parse_trait() {
 {
 parser::ParsedTrait parsed_trait = parser::ParsedTrait(String(""),((*this).empty_span()),(TRY((Array<parser::ParsedGenericParameter>::create_with({})))),(TRY((Array<parser::ParsedFunction>::create_with({})))));
 if (((((*this).current())).index() == 4 /* Identifier */)){
-String const name = (((*this).current()).get<lexer::Token::Identifier>()).name;
-utility::Span const name_span = (((*this).current()).get<lexer::Token::Identifier>()).span;
+String const name = ((((*this).current())).get<lexer::Token::Identifier>()).name;
+utility::Span const name_span = ((((*this).current())).get<lexer::Token::Identifier>()).span;
 (((parsed_trait).name) = name);
 (((parsed_trait).name_span) = name_span);
 ((((*this).index)++));
@@ -2116,7 +2124,7 @@ TRY((((*this).error(String("Expected comma"),((((*this).current())).span())))));
 JaktInternal::Array<String> names = (TRY((Array<String>::create_with({}))));
 for (;;){
 if (((((*this).current())).index() == 4 /* Identifier */)){
-String const name = (((*this).current()).get<lexer::Token::Identifier>()).name;
+String const name = ((((*this).current())).get<lexer::Token::Identifier>()).name;
 TRY((((names).push(name))));
 ((((*this).index)++));
 if (((((*this).current())).index() == 7 /* ColonColon */)){
@@ -2279,8 +2287,8 @@ TRY((((*this).error(String("Incomplete class definition, expected name"),((((*th
 return (parsed_class);
 }
 if (((((*this).current())).index() == 4 /* Identifier */)){
-String const name = (((*this).current()).get<lexer::Token::Identifier>()).name;
-utility::Span const span = (((*this).current()).get<lexer::Token::Identifier>()).span;
+String const name = ((((*this).current())).get<lexer::Token::Identifier>()).name;
+utility::Span const span = ((((*this).current())).get<lexer::Token::Identifier>()).span;
 ((((*this).index)++));
 (((parsed_class).name) = name);
 (((parsed_class).name_span) = span);
@@ -2344,8 +2352,8 @@ TRY((((*this).error(String("Incomplete enum definition, expected name"),((((*thi
 return (parsed_enum);
 }
 if (((((*this).current())).index() == 4 /* Identifier */)){
-String const name = (((*this).current()).get<lexer::Token::Identifier>()).name;
-utility::Span const span = (((*this).current()).get<lexer::Token::Identifier>()).span;
+String const name = ((((*this).current())).get<lexer::Token::Identifier>()).name;
+utility::Span const span = ((((*this).current())).get<lexer::Token::Identifier>()).span;
 (((parsed_enum).name) = name);
 (((parsed_enum).name_span) = span);
 ((((*this).index)++));
@@ -2487,7 +2495,7 @@ JaktInternal::Optional<String> catch_name = JaktInternal::OptionalNone();
 if (((((*this).current())).index() == 65 /* Catch */)){
 ((((*this).index)++));
 if (((((*this).current())).index() == 4 /* Identifier */)){
-String const name = (((*this).current()).get<lexer::Token::Identifier>()).name;
+String const name = ((((*this).current())).get<lexer::Token::Identifier>()).name;
 (catch_name = name);
 ((((*this).index)++));
 }
@@ -2893,7 +2901,7 @@ TRY((((*this).error(String("Incomplete function definition"),((((*this).current(
 return (parsed_function);
 }
 if (((((*this).current())).index() == 4 /* Identifier */)){
-String const name = (((*this).current()).get<lexer::Token::Identifier>()).name;
+String const name = ((((*this).current())).get<lexer::Token::Identifier>()).name;
 (((parsed_function).name) = name);
 (((parsed_function).name_span) = ((((*this).current())).span()));
 ((((*this).index)++));
@@ -2948,7 +2956,7 @@ ErrorOr<JaktInternal::Optional<JaktInternal::Array<parser::IncludeAction>>> pars
 {
 ((*this).skip_newlines());
 if (((((*this).current())).index() == 4 /* Identifier */)){
-String const name = (((*this).current()).get<lexer::Token::Identifier>()).name;
+String const name = ((((*this).current())).get<lexer::Token::Identifier>()).name;
 JAKT_RESOLVE_EXPLICIT_VALUE_OR_CONTROL_FLOW_RETURN_ONLY(([&]() -> JaktInternal::ExplicitValueOrControlFlow<void,ErrorOr<JaktInternal::Optional<JaktInternal::Array<parser::IncludeAction>>>>{
 auto __jakt_enum_value = (name);
 if (__jakt_enum_value == String("define")) {
@@ -2967,7 +2975,7 @@ return (JaktInternal::OptionalNone());
 JaktInternal::Array<parser::IncludeAction> defines = (TRY((Array<parser::IncludeAction>::create_with({}))));
 for (;;){
 if (((((*this).current())).index() == 4 /* Identifier */)){
-String const name = (((*this).current()).get<lexer::Token::Identifier>()).name;
+String const name = ((((*this).current())).get<lexer::Token::Identifier>()).name;
 utility::Span const span = ((((*this).current())).span());
 ((((*this).index)++));
 ((*this).skip_newlines());
@@ -3041,7 +3049,7 @@ return (JaktInternal::OptionalNone());
 JaktInternal::Array<parser::IncludeAction> defines = (TRY((Array<parser::IncludeAction>::create_with({}))));
 for (;;){
 if (((((*this).current())).index() == 4 /* Identifier */)){
-String const name = (((*this).current()).get<lexer::Token::Identifier>()).name;
+String const name = ((((*this).current())).get<lexer::Token::Identifier>()).name;
 utility::Span const span = ((((*this).current())).span());
 ((((*this).index)++));
 TRY((((defines).push( parser::IncludeAction { typename parser::IncludeAction::Undefine(name,span) } ))));
@@ -3177,8 +3185,8 @@ return JaktInternal::ExplicitValue<void>();
 if (((((*this).current())).index() == 62 /* As */)){
 ((((*this).index)++));
 if (((((*this).current())).index() == 4 /* Identifier */)){
-String const name = (((*this).current()).get<lexer::Token::Identifier>()).name;
-utility::Span const span = (((*this).current()).get<lexer::Token::Identifier>()).span;
+String const name = ((((*this).current())).get<lexer::Token::Identifier>()).name;
+utility::Span const span = ((((*this).current())).get<lexer::Token::Identifier>()).span;
 ((((*this).index)++));
 (((parsed_import).alias_name) =  parser::ImportName { typename parser::ImportName::Literal(name,span) } );
 }
@@ -3204,7 +3212,7 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<lexer::Token::Iden
 utility::Span const& span = __jakt_match_value.span;
 {
 if (((((parsed_import).import_list)).index() == 0 /* List */)){
-JaktInternal::Array<parser::ImportName> const names = (((parsed_import).import_list).get<parser::ImportList::List>()).value;
+JaktInternal::Array<parser::ImportName> const names = ((((parsed_import).import_list)).get<parser::ImportList::List>()).value;
 JaktInternal::Array<parser::ImportName> mutable_names = names;
 TRY((((mutable_names).push( parser::ImportName { typename parser::ImportName::Literal(name,span) } ))));
 }
@@ -3220,7 +3228,7 @@ case 37: {
 auto&& __jakt_match_value = __jakt_match_variant.template get<typename lexer::Token::Asterisk>();
 {
 if (((((parsed_import).import_list)).index() == 0 /* List */)){
-JaktInternal::Array<parser::ImportName> const names = (((parsed_import).import_list).get<parser::ImportList::List>()).value;
+JaktInternal::Array<parser::ImportName> const names = ((((parsed_import).import_list)).get<parser::ImportList::List>()).value;
 if (((names).is_empty())){
 (((parsed_import).import_list) =  parser::ImportList { typename parser::ImportList::All() } );
 }
@@ -3638,8 +3646,8 @@ while ((!(((*this).eof())))){
 if (((((*this).peek(static_cast<size_t>(1ULL)))).index() == 6 /* Colon */)){
 parser::ParsedVarDecl var_decl = TRY((((*this).parse_variable_declaration(false))));
 if (((((var_decl).parsed_type))->index() == 0 /* Name */)){
-String const name = (((var_decl).parsed_type)->get<parser::ParsedType::Name>()).name;
-utility::Span const span = (((var_decl).parsed_type)->get<parser::ParsedType::Name>()).span;
+String const name = ((((var_decl).parsed_type))->get<parser::ParsedType::Name>()).name;
+utility::Span const span = ((((var_decl).parsed_type))->get<parser::ParsedType::Name>()).span;
 (((var_decl).inlay_span) = span);
 if (((name == ((partial_enum).name)) && (!(is_boxed)))){
 TRY((((*this).error(String("use 'boxed enum' to make the enum recursive"),((var_decl).span)))));
@@ -4233,7 +4241,7 @@ ErrorOr<JaktInternal::Optional<parser::ParsedCall>> parser::Parser::parse_call()
 {
 parser::ParsedCall call = parser::ParsedCall((TRY((Array<String>::create_with({})))),String(""),(TRY((Array<JaktInternal::Tuple<String,utility::Span,NonnullRefPtr<parser::ParsedExpression>>>::create_with({})))),(TRY((Array<NonnullRefPtr<parser::ParsedType>>::create_with({})))));
 if (((((*this).current())).index() == 4 /* Identifier */)){
-String const name = (((*this).current()).get<lexer::Token::Identifier>()).name;
+String const name = ((((*this).current())).get<lexer::Token::Identifier>()).name;
 (((call).name) = name);
 ((((*this).index)++));
 size_t const index_reset = ((*this).index);
@@ -4356,8 +4364,8 @@ TRY((((*this).error(String("Incomplete struct definition, expected name"),((((*t
 return (parsed_struct);
 }
 if (((((*this).current())).index() == 4 /* Identifier */)){
-String const name = (((*this).current()).get<lexer::Token::Identifier>()).name;
-utility::Span const span = (((*this).current()).get<lexer::Token::Identifier>()).span;
+String const name = ((((*this).current())).get<lexer::Token::Identifier>()).name;
+utility::Span const span = ((((*this).current())).get<lexer::Token::Identifier>()).span;
 ((((*this).index)++));
 (((parsed_struct).name) = name);
 (((parsed_struct).name_span) = span);
@@ -5949,8 +5957,8 @@ ErrorOr<parser::ParsedExternImport> parser::Parser::parse_extern_import(parser::
 {
 parser::ParsedExternImport parsed_import = parser::ParsedExternImport(false,parser::ParsedNamespace(JaktInternal::OptionalNone(),JaktInternal::OptionalNone(),(TRY((Array<parser::ParsedFunction>::create_with({})))),(TRY((Array<parser::ParsedRecord>::create_with({})))),(TRY((Array<parser::ParsedTrait>::create_with({})))),(TRY((Array<parser::ParsedExternalTraitImplementation>::create_with({})))),(TRY((Array<parser::ParsedNamespace>::create_with({})))),(TRY((Array<parser::ParsedModuleImport>::create_with({})))),(TRY((Array<parser::ParsedExternImport>::create_with({})))),JaktInternal::OptionalNone(),(TRY((Array<parser::IncludeAction>::create_with({})))),(TRY((Array<parser::IncludeAction>::create_with({}))))),(TRY((Array<parser::IncludeAction>::create_with({})))),(TRY((Array<parser::IncludeAction>::create_with({})))));
 if (((((*this).current())).index() == 4 /* Identifier */)){
-String const name = (((*this).current()).get<lexer::Token::Identifier>()).name;
-utility::Span const span = (((*this).current()).get<lexer::Token::Identifier>()).span;
+String const name = ((((*this).current())).get<lexer::Token::Identifier>()).name;
+utility::Span const span = ((((*this).current())).get<lexer::Token::Identifier>()).span;
 ((((*this).index)++));
 if (((name == String("c")) || (name == String("C")))){
 (((parsed_import).is_c) = true);
@@ -5986,8 +5994,8 @@ __jakt_label_58:; __jakt_var_60.release_value(); }));
 if (((((*this).current())).index() == 62 /* As */)){
 ((((*this).index)++));
 if (((((*this).current())).index() == 4 /* Identifier */)){
-String const name = (((*this).current()).get<lexer::Token::Identifier>()).name;
-utility::Span const span = (((*this).current()).get<lexer::Token::Identifier>()).span;
+String const name = ((((*this).current())).get<lexer::Token::Identifier>()).name;
+utility::Span const span = ((((*this).current())).get<lexer::Token::Identifier>()).span;
 ((((*this).index)++));
 (((((parsed_import).assigned_namespace)).name) = name);
 (((((parsed_import).assigned_namespace)).name_span) = span);
@@ -6014,7 +6022,7 @@ TRY((((*this).error(String("Expected '}' to end namespace for the extern import"
 
 for (;;){
 if (((((*this).current())).index() == 4 /* Identifier */)){
-String const name = (((*this).current()).get<lexer::Token::Identifier>()).name;
+String const name = ((((*this).current())).get<lexer::Token::Identifier>()).name;
 JAKT_RESOLVE_EXPLICIT_VALUE_OR_CONTROL_FLOW_AT_LOOP(([&]() -> JaktInternal::ExplicitValueOrControlFlow<void,ErrorOr<parser::ParsedExternImport>>{
 auto __jakt_enum_value = (name);
 if (__jakt_enum_value == String("before_include")) {
@@ -6064,21 +6072,39 @@ bool has_parens = false;
 if (((((*this).current())).index() == 8 /* LParen */)){
 (has_parens = true);
 ((((*this).index)++));
+bool is_reference = false;
+bool is_mutable = false;
 while ((!(((*this).eof())))){
 ((*this).skip_newlines());
 JAKT_RESOLVE_EXPLICIT_VALUE_OR_CONTROL_FLOW_AT_LOOP(([&]() -> JaktInternal::ExplicitValueOrControlFlow<void, ErrorOr<JaktInternal::Array<parser::EnumVariantPatternArgument>>>{
 auto&& __jakt_match_variant = ((*this).current());
 switch(__jakt_match_variant.index()) {
+case 38: {
+auto&& __jakt_match_value = __jakt_match_variant.template get<typename lexer::Token::Ampersand>();
+{
+(is_reference = true);
+((((*this).index)++));
+}
+return JaktInternal::ExplicitValue<void>();
+};/*case end*/
+case 84: {
+auto&& __jakt_match_value = __jakt_match_variant.template get<typename lexer::Token::Mut>();
+{
+(is_mutable = true);
+((((*this).index)++));
+}
+return JaktInternal::ExplicitValue<void>();
+};/*case end*/
 case 4: {
 auto&& __jakt_match_value = __jakt_match_variant.template get<lexer::Token::Identifier>();String const& arg_name = __jakt_match_value.name;
 {
 if (((((*this).peek(static_cast<size_t>(1ULL)))).index() == 6 /* Colon */)){
 ({auto& _jakt_ref = ((*this).index);_jakt_ref = JaktInternal::checked_add<size_t>(_jakt_ref, static_cast<size_t>(2ULL));});
 if (((((*this).current())).index() == 4 /* Identifier */)){
-String const arg_binding = (((*this).current()).get<lexer::Token::Identifier>()).name;
+String const arg_binding = ((((*this).current())).get<lexer::Token::Identifier>()).name;
 utility::Span const span = ((((*this).current())).span());
 ((((*this).index)++));
-TRY((((variant_arguments).push(parser::EnumVariantPatternArgument(static_cast<JaktInternal::Optional<String>>(arg_name),arg_binding,span)))));
+TRY((((variant_arguments).push(parser::EnumVariantPatternArgument(static_cast<JaktInternal::Optional<String>>(arg_name),arg_binding,span,is_reference,is_mutable)))));
 }
 else {
 TRY((((*this).error(String("Expected binding after ‘:’"),((((*this).current())).span())))));
@@ -6086,10 +6112,12 @@ TRY((((*this).error(String("Expected binding after ‘:’"),((((*this).current(
 
 }
 else {
-TRY((((variant_arguments).push(parser::EnumVariantPatternArgument(JaktInternal::OptionalNone(),arg_name,((((*this).current())).span()))))));
+TRY((((variant_arguments).push(parser::EnumVariantPatternArgument(JaktInternal::OptionalNone(),arg_name,((((*this).current())).span()),is_reference,is_mutable)))));
 ((((*this).index)++));
 }
 
+(is_reference = false);
+(is_mutable = false);
 }
 return JaktInternal::ExplicitValue<void>();
 };/*case end*/
@@ -6677,7 +6705,7 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<typename lexer::To
 {
 ((((*this).index)++));
 if (((((*this).current())).index() == 4 /* Identifier */)){
-String const name = (((*this).current()).get<lexer::Token::Identifier>()).name;
+String const name = ((((*this).current())).get<lexer::Token::Identifier>()).name;
 TRY((((captures).push( parser::ParsedCapture { typename parser::ParsedCapture::ByMutableReference(name,((((*this).current())).span())) } ))));
 ((((*this).index)++));
 }
@@ -6786,7 +6814,7 @@ ErrorOr<NonnullRefPtr<parser::ParsedExpression>> parser::Parser::parse_postfix_c
 ((((*this).index)++));
 JaktInternal::Array<String> namespace_ = (TRY((Array<String>::create_with({}))));
 if (((expr)->index() == 9 /* Var */)){
-String const name = (expr->get<parser::ParsedExpression::Var>()).name;
+String const name = ((expr)->get<parser::ParsedExpression::Var>()).name;
 TRY((((namespace_).push(name))));
 }
 else {
@@ -6795,7 +6823,7 @@ TRY((((*this).error(String("Expected namespace"),((expr)->span())))));
 
 while ((!(((*this).eof())))){
 if (((((*this).current())).index() == 4 /* Identifier */)){
-String const current_name = (((*this).current()).get<lexer::Token::Identifier>()).name;
+String const current_name = ((((*this).current())).get<lexer::Token::Identifier>()).name;
 ((((*this).index)++));
 if (((((*this).current())).index() == 8 /* LParen */)){
 ((((*this).index)--));
@@ -6815,7 +6843,7 @@ return (TRY((parser::ParsedExpression::template create<typename parser::ParsedEx
 }
 if (((((*this).current())).index() == 7 /* ColonColon */)){
 if (((((*this).previous())).index() == 4 /* Identifier */)){
-String const name = (((*this).previous()).get<lexer::Token::Identifier>()).name;
+String const name = ((((*this).previous())).get<lexer::Token::Identifier>()).name;
 TRY((((namespace_).push(name))));
 }
 else {
@@ -7062,7 +7090,7 @@ utility::Span error_span = ((((*this).current())).span());
 if (((((*this).current())).index() == 65 /* Catch */)){
 ((((*this).index)++));
 if (((((*this).current())).index() == 4 /* Identifier */)){
-String const name = (((*this).current()).get<lexer::Token::Identifier>()).name;
+String const name = ((((*this).current())).get<lexer::Token::Identifier>()).name;
 (error_span = ((((*this).current())).span()));
 (error_name = name);
 ((((*this).index)++));
@@ -7383,7 +7411,7 @@ ErrorOr<parser::ParsedVarDecl> parser::Parser::parse_variable_declaration(bool c
 {
 utility::Span const span = ((((*this).current())).span());
 if (((((*this).current())).index() == 4 /* Identifier */)){
-String const name = (((*this).current()).get<lexer::Token::Identifier>()).name;
+String const name = ((((*this).current())).get<lexer::Token::Identifier>()).name;
 ((((*this).index)++));
 if (((((*this).current())).index() == 6 /* Colon */)){
 ((((*this).index)++));
@@ -7579,7 +7607,7 @@ __jakt_var_76 = JAKT_RESOLVE_EXPLICIT_VALUE_OR_CONTROL_FLOW_AT_LOOP_NESTED_MATCH
 auto __jakt_enum_value = (((numeric_constant)->index() == 1 /* NumericConstant */));
 if (__jakt_enum_value == true) {
 return JaktInternal::ExplicitValue(({ Optional<NonnullRefPtr<parser::ParsedExpression>> __jakt_var_77; {
-parser::NumericConstant const val = (numeric_constant->get<parser::ParsedExpression::NumericConstant>()).val;
+parser::NumericConstant const val = ((numeric_constant)->get<parser::ParsedExpression::NumericConstant>()).val;
 size_t const num = ((val).to_usize());
 __jakt_var_77 = TRY((parser::ParsedExpression::template create<typename parser::ParsedExpression::IndexedTuple>(result,num,is_optional,TRY((parser::merge_spans(start,((((*this).previous())).span()))))))); goto __jakt_label_75;
 
@@ -7666,7 +7694,7 @@ __jakt_var_82 = JAKT_RESOLVE_EXPLICIT_VALUE_OR_CONTROL_FLOW_AT_LOOP_NESTED_MATCH
 auto __jakt_enum_value = (((numeric_constant)->index() == 1 /* NumericConstant */));
 if (__jakt_enum_value == true) {
 return JaktInternal::ExplicitValue(({ Optional<NonnullRefPtr<parser::ParsedExpression>> __jakt_var_83; {
-parser::NumericConstant const val = (numeric_constant->get<parser::ParsedExpression::NumericConstant>()).val;
+parser::NumericConstant const val = ((numeric_constant)->get<parser::ParsedExpression::NumericConstant>()).val;
 size_t const num = ((val).to_usize());
 __jakt_var_83 = TRY((parser::ParsedExpression::template create<typename parser::ParsedExpression::IndexedTuple>(result,num,is_optional,TRY((parser::merge_spans(start,((((*this).previous())).span()))))))); goto __jakt_label_81;
 
@@ -7768,8 +7796,8 @@ JaktInternal::Array<parser::ParsedGenericParameter> generic_parameters = (TRY((A
 ((*this).skip_newlines());
 while (((!(((((*this).current())).index() == 27 /* GreaterThan */))) && (!(((((*this).current())).index() == 109 /* Garbage */))))){
 if (((((*this).current())).index() == 4 /* Identifier */)){
-String const name = (((*this).current()).get<lexer::Token::Identifier>()).name;
-utility::Span const span = (((*this).current()).get<lexer::Token::Identifier>()).span;
+String const name = ((((*this).current())).get<lexer::Token::Identifier>()).name;
+utility::Span const span = ((((*this).current())).get<lexer::Token::Identifier>()).span;
 JaktInternal::Optional<JaktInternal::Array<parser::ParsedNameWithGenericParameters>> requires_list = JaktInternal::OptionalNone();
 ((((*this).index)++));
 if (((((*this).current())).index() == 107 /* Requires */)){
@@ -11020,7 +11048,7 @@ String parser::ImportName::literal_name() const {
 {
 parser::ImportName const that = *this;
 if (((that).index() == 0 /* Literal */)){
-String const name = (that.get<parser::ImportName::Literal>()).name;
+String const name = ((that).get<parser::ImportName::Literal>()).name;
 return (name);
 }
 else {

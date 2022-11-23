@@ -9,5 +9,12 @@ return Error::from_errno(static_cast<i32>(38));
 return {};
 }
 
+ErrorOr<String> current_directory() {
+{
+warnln(String("NOT IMPLEMENTED: current_directory"));
+return Error::from_errno(static_cast<i32>(38));
+}
+}
+
 }
 } // namespace Jakt

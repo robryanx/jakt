@@ -672,7 +672,7 @@ bool is_assignment() const;
 };
 struct EnumVariantPatternArgument {
   public:
-JaktInternal::Optional<String> name;String binding;utility::Span span;EnumVariantPatternArgument(JaktInternal::Optional<String> a_name, String a_binding, utility::Span a_span);
+JaktInternal::Optional<String> name;String binding;utility::Span span;bool is_reference;bool is_mutable;EnumVariantPatternArgument(JaktInternal::Optional<String> a_name, String a_binding, utility::Span a_span, bool a_is_reference, bool a_is_mutable);
 
 bool equals(parser::EnumVariantPatternArgument const rhs_variant_pattern_argument) const;
 ErrorOr<String> debug_description() const;

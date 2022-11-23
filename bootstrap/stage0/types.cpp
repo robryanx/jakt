@@ -1276,7 +1276,7 @@ TRY((((((*this).compiler))->panic(TRY((String::formatted(String("Internal error:
 types::TypeId const inner_type_id = ((args)[static_cast<i64>(0LL)]);
 NonnullRefPtr<types::Type> const inner_type = ((*this).get_type(inner_type_id));
 if (((inner_type)->index() == 23 /* Struct */)){
-types::StructId const inner_struct_id = (inner_type->get<types::Type::Struct>()).value;
+types::StructId const inner_struct_id = ((inner_type)->get<types::Type::Struct>()).value;
 return (inner_struct_id);
 }
 utility::panic(TRY((String::formatted(String("Internal error: Inner type of WeakPtr is not a struct. It is {}."),inner_type))));
@@ -2505,7 +2505,7 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<typename types::Ty
 String const& lhs_name = __jakt_match_value.value;
 {
 if (((rhs)->index() == 18 /* TypeVariable */)){
-String const rhs_name = (rhs->get<types::Type::TypeVariable>()).value;
+String const rhs_name = ((rhs)->get<types::Type::TypeVariable>()).value;
 return ((lhs_name == rhs_name));
 }
 else {
@@ -2520,8 +2520,8 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<types::Type::Gener
 JaktInternal::Array<types::TypeId> const& lhs_args = __jakt_match_value.args;
 {
 if (((rhs)->index() == 19 /* GenericInstance */)){
-types::StructId const rhs_id = (rhs->get<types::Type::GenericInstance>()).id;
-JaktInternal::Array<types::TypeId> const rhs_args = (rhs->get<types::Type::GenericInstance>()).args;
+types::StructId const rhs_id = ((rhs)->get<types::Type::GenericInstance>()).id;
+JaktInternal::Array<types::TypeId> const rhs_args = ((rhs)->get<types::Type::GenericInstance>()).args;
 if ((((lhs_id).equals(rhs_id)) && (((lhs_args).size()) == ((rhs_args).size())))){
 size_t idx = static_cast<size_t>(0ULL);
 while ((idx < ((lhs_args).size()))){
@@ -2549,8 +2549,8 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<types::Type::Gener
 JaktInternal::Array<types::TypeId> const& lhs_args = __jakt_match_value.args;
 {
 if (((rhs)->index() == 21 /* GenericTraitInstance */)){
-types::TraitId const rhs_id = (rhs->get<types::Type::GenericTraitInstance>()).id;
-JaktInternal::Array<types::TypeId> const rhs_args = (rhs->get<types::Type::GenericTraitInstance>()).args;
+types::TraitId const rhs_id = ((rhs)->get<types::Type::GenericTraitInstance>()).id;
+JaktInternal::Array<types::TypeId> const rhs_args = ((rhs)->get<types::Type::GenericTraitInstance>()).args;
 if ((((lhs_id).equals(rhs_id)) && (((lhs_args).size()) == ((rhs_args).size())))){
 size_t idx = static_cast<size_t>(0ULL);
 while ((idx < ((lhs_args).size()))){
@@ -2578,8 +2578,8 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<types::Type::Gener
 JaktInternal::Array<types::TypeId> const& lhs_args = __jakt_match_value.args;
 {
 if (((rhs)->index() == 20 /* GenericEnumInstance */)){
-types::EnumId const rhs_id = (rhs->get<types::Type::GenericEnumInstance>()).id;
-JaktInternal::Array<types::TypeId> const rhs_args = (rhs->get<types::Type::GenericEnumInstance>()).args;
+types::EnumId const rhs_id = ((rhs)->get<types::Type::GenericEnumInstance>()).id;
+JaktInternal::Array<types::TypeId> const rhs_args = ((rhs)->get<types::Type::GenericEnumInstance>()).args;
 if ((((lhs_id).equals(rhs_id)) && (((lhs_args).size()) == ((rhs_args).size())))){
 size_t idx = static_cast<size_t>(0ULL);
 while ((idx < ((lhs_args).size()))){
@@ -2607,7 +2607,7 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<typename types::Ty
 types::StructId const& lhs_id = __jakt_match_value.value;
 {
 if (((rhs)->index() == 23 /* Struct */)){
-types::StructId const rhs_id = (rhs->get<types::Type::Struct>()).value;
+types::StructId const rhs_id = ((rhs)->get<types::Type::Struct>()).value;
 return (((lhs_id).equals(rhs_id)));
 }
 return (false);
@@ -2619,7 +2619,7 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<typename types::Ty
 types::EnumId const& lhs_id = __jakt_match_value.value;
 {
 if (((rhs)->index() == 24 /* Enum */)){
-types::EnumId const rhs_id = (rhs->get<types::Type::Enum>()).value;
+types::EnumId const rhs_id = ((rhs)->get<types::Type::Enum>()).value;
 return (((lhs_id).equals(rhs_id)));
 }
 else {
@@ -2634,7 +2634,7 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<typename types::Ty
 types::TypeId const& lhs_id = __jakt_match_value.value;
 {
 if (((rhs)->index() == 25 /* RawPtr */)){
-types::TypeId const rhs_id = (rhs->get<types::Type::RawPtr>()).value;
+types::TypeId const rhs_id = ((rhs)->get<types::Type::RawPtr>()).value;
 return (((lhs_id).equals(rhs_id)));
 }
 else {
@@ -2649,7 +2649,7 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<typename types::Ty
 types::TypeId const& lhs_id = __jakt_match_value.value;
 {
 if (((rhs)->index() == 27 /* Reference */)){
-types::TypeId const rhs_id = (rhs->get<types::Type::Reference>()).value;
+types::TypeId const rhs_id = ((rhs)->get<types::Type::Reference>()).value;
 return (((lhs_id).equals(rhs_id)));
 }
 else {
@@ -2664,7 +2664,7 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<typename types::Ty
 types::TypeId const& lhs_id = __jakt_match_value.value;
 {
 if (((rhs)->index() == 28 /* MutableReference */)){
-types::TypeId const rhs_id = (rhs->get<types::Type::MutableReference>()).value;
+types::TypeId const rhs_id = ((rhs)->get<types::Type::MutableReference>()).value;
 return (((lhs_id).equals(rhs_id)));
 }
 else {
@@ -2679,7 +2679,7 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<typename types::Ty
 types::TraitId const& lhs_id = __jakt_match_value.value;
 {
 if (((rhs)->index() == 26 /* Trait */)){
-types::TraitId const rhs_id = (rhs->get<types::Type::Trait>()).value;
+types::TraitId const rhs_id = ((rhs)->get<types::Type::Trait>()).value;
 return (((lhs_id).equals(rhs_id)));
 }
 else {
@@ -2695,9 +2695,9 @@ bool const& can_throw = __jakt_match_value.can_throw;
 types::TypeId const& return_type_id = __jakt_match_value.return_type_id;
 {
 if (((rhs)->index() == 29 /* Function */)){
-JaktInternal::Array<types::TypeId> const rhs_params = (rhs->get<types::Type::Function>()).params;
-bool const rhs_can_throw = (rhs->get<types::Type::Function>()).can_throw;
-types::TypeId const rhs_return_type_id = (rhs->get<types::Type::Function>()).return_type_id;
+JaktInternal::Array<types::TypeId> const rhs_params = ((rhs)->get<types::Type::Function>()).params;
+bool const rhs_can_throw = ((rhs)->get<types::Type::Function>()).can_throw;
+types::TypeId const rhs_return_type_id = ((rhs)->get<types::Type::Function>()).return_type_id;
 if (((((params).size()) == ((rhs_params).size())) && (((return_type_id).equals(rhs_return_type_id)) && (can_throw == rhs_can_throw)))){
 {
 JaktInternal::Range<size_t> _magic = (JaktInternal::Range<size_t>{static_cast<size_t>(static_cast<size_t>(0ULL)),static_cast<size_t>(((params).size()))});
@@ -4832,7 +4832,7 @@ String const& relative_name = __jakt_match_value.relative_name;
 return JaktInternal::ExplicitValue(({ Optional<NonnullRefPtr<types::MaybeResolvedScope>> __jakt_var_107; {
 NonnullRefPtr<types::MaybeResolvedScope> parent = TRY((((parent_scope)->try_resolve(program))));
 if (((parent)->index() == 0 /* Resolved */)){
-types::ScopeId const parent_scope_id = (parent->get<types::MaybeResolvedScope::Resolved>()).value;
+types::ScopeId const parent_scope_id = ((parent)->get<types::MaybeResolvedScope::Resolved>()).value;
 types::ScopeId const scope = parent_scope_id;
 JaktInternal::Optional<types::ScopeId> scope_id = JaktInternal::OptionalNone();
 if ((!(((scope_id).has_value())))){
@@ -5655,7 +5655,7 @@ __jakt_var_108 = JAKT_RESOLVE_EXPLICIT_VALUE_OR_CONTROL_FLOW_RETURN_ONLY(([&]() 
 auto __jakt_enum_value = (((op).index() == 11 /* TypeCast */));
 if (__jakt_enum_value == true) {
 return JaktInternal::ExplicitValue(({ Optional<JaktInternal::Optional<types::NumberConstant>> __jakt_var_109; {
-types::CheckedTypeCast const cast = (op.get<types::CheckedUnaryOperator::TypeCast>()).value;
+types::CheckedTypeCast const cast = ((op).get<types::CheckedUnaryOperator::TypeCast>()).value;
 if ((!(((cast).index() == 1 /* Infallible */)))){
 (result = JaktInternal::OptionalNone());
 }
@@ -5663,7 +5663,7 @@ if (((!(((program)->is_integer(type_id)))) && (!(((program)->is_floating(type_id
 (result = JaktInternal::OptionalNone());
 }
 if (((expr)->index() == 1 /* NumericConstant */)){
-types::CheckedNumericConstant const val = (expr->get<types::CheckedExpression::NumericConstant>()).val;
+types::CheckedNumericConstant const val = ((expr)->get<types::CheckedExpression::NumericConstant>()).val;
 (result = ((val).number_constant()));
 }
 __jakt_var_109 = result; goto __jakt_label_107;

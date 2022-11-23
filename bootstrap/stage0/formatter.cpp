@@ -1826,6 +1826,10 @@ return JaktInternal::ExplicitValue(formatter::FormattedToken(token,((*this).inde
 };/*case end*/
 case 4: {
 auto&& __jakt_match_value = __jakt_match_variant.template get<lexer::Token::Identifier>();return JaktInternal::ExplicitValue(({ Optional<formatter::FormattedToken> __jakt_var_456; {
+if (((!(is_extern)) && ((((*this).peek(static_cast<i64>(0LL)))).index() == 8 /* LParen */))){
+TRY((((*this).push_state( formatter::State { typename formatter::State::StatementContext(static_cast<size_t>(0ULL),static_cast<size_t>(0ULL),static_cast<size_t>(0ULL),static_cast<size_t>(0ULL),JaktInternal::OptionalNone(),false, formatter::ExpressionMode { typename formatter::ExpressionMode::AtExpressionStart() } ,static_cast<size_t>(0ULL)) } ))));
+return (formatter::FormattedToken(token,((*this).indent),(TRY((Array<u8>::create_with({})))),(TRY((Array<u8>::create_with({}))))));
+}
 if (((!(is_extern)) && ((!(((((*this).peek(static_cast<i64>(0LL)))).index() == 10 /* LCurly */))) && (!(((((*this).peek(static_cast<i64>(0LL)))).index() == 62 /* As */)))))){
 ((*this).pop_state());
 }
@@ -1918,7 +1922,7 @@ String output = String("");
 utility::Span const span = ((token).span());
 while ((!(((token).index() == 11 /* RCurly */)))){
 if (((token).index() == 4 /* Identifier */)){
-String const name = (token.get<lexer::Token::Identifier>()).name;
+String const name = ((token).get<lexer::Token::Identifier>()).name;
 TRY((((collection).push(name))));
 }
 (token = ((*this).consume()));

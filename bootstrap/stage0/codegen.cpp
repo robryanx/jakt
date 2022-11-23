@@ -1290,7 +1290,7 @@ break;
 types::CheckedGenericParameter generic_parameter = (_magic_value.value());
 {
 if (((((((*this).program))->get_type(((generic_parameter).type_id))))->index() == 18 /* TypeVariable */)){
-String const name = (((((*this).program))->get_type(((generic_parameter).type_id)))->get<types::Type::TypeVariable>()).value;
+String const name = ((((((*this).program))->get_type(((generic_parameter).type_id))))->get<types::Type::TypeVariable>()).value;
 TRY((((generic_parameter_names).push(name))));
 }
 }
@@ -1876,8 +1876,8 @@ if ((!(first))){
 (output += String("else "));
 }
 if (((expression)->index() == 8 /* Range */)){
-JaktInternal::Optional<NonnullRefPtr<types::CheckedExpression>> const from = (expression->get<types::CheckedExpression::Range>()).from;
-JaktInternal::Optional<NonnullRefPtr<types::CheckedExpression>> const to = (expression->get<types::CheckedExpression::Range>()).to;
+JaktInternal::Optional<NonnullRefPtr<types::CheckedExpression>> const from = ((expression)->get<types::CheckedExpression::Range>()).from;
+JaktInternal::Optional<NonnullRefPtr<types::CheckedExpression>> const to = ((expression)->get<types::CheckedExpression::Range>()).to;
 (output += String("if (__jakt_enum_value"));
 if (((from).has_value())){
 (output += String(" >= "));
@@ -2309,7 +2309,7 @@ types::EnumId const& id = __jakt_match_value.value;
 {
 types::CheckedEnum const structure = ((((*this).program))->get_enum(id));
 if (((((structure).record_type)).index() == 3 /* SumEnum */)){
-bool const is_boxed = (((structure).record_type).get<parser::RecordType::SumEnum>()).is_boxed;
+bool const is_boxed = ((((structure).record_type)).get<parser::RecordType::SumEnum>()).is_boxed;
 if ((is_boxed && (object != String("*this")))){
 (output += String("->"));
 }
@@ -2330,7 +2330,7 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<types::Type::Gener
 {
 types::CheckedEnum const structure = ((((*this).program))->get_enum(id));
 if (((((structure).record_type)).index() == 3 /* SumEnum */)){
-bool const is_boxed = (((structure).record_type).get<parser::RecordType::SumEnum>()).is_boxed;
+bool const is_boxed = ((((structure).record_type)).get<parser::RecordType::SumEnum>()).is_boxed;
 if ((is_boxed && (object != String("*this")))){
 (output += String("->"));
 }
@@ -2798,7 +2798,7 @@ return JaktInternal::ExplicitValue(String("."));
 }
 }()))
 ;
-__jakt_var_423 = TRY((String::formatted(String("({}{}get<{}::{}>()).{}"),var_name,cpp_deref_operator,enum_type,variant_name,arg_name))); goto __jakt_label_390;
+__jakt_var_423 = TRY((String::formatted(String("(({}){}get<{}::{}>()).{}"),var_name,cpp_deref_operator,enum_type,variant_name,arg_name))); goto __jakt_label_390;
 
 }
 __jakt_label_390:; __jakt_var_423.release_value(); }));
@@ -3778,7 +3778,7 @@ break;
 types::CheckedGenericParameter generic_parameter = (_magic_value.value());
 {
 if (((((((*this).program))->get_type(((generic_parameter).type_id))))->index() == 18 /* TypeVariable */)){
-String const name = (((((*this).program))->get_type(((generic_parameter).type_id)))->get<types::Type::TypeVariable>()).value;
+String const name = ((((((*this).program))->get_type(((generic_parameter).type_id))))->get<types::Type::TypeVariable>()).value;
 TRY((((template_args_array).push((String("typename ") + name)))));
 }
 }
@@ -3865,7 +3865,7 @@ if (rhs_can_throw){
 }
 (output += TRY((((*this).codegen_expression(lhs)))));
 if (((rhs_type)->index() == 19 /* GenericInstance */)){
-types::StructId const id = (rhs_type->get<types::Type::GenericInstance>()).id;
+types::StructId const id = ((rhs_type)->get<types::Type::GenericInstance>()).id;
 if ((((((((*this).program))->get_struct(id))).name) == String("Optional"))){
 if (rhs_can_throw){
 (output += String(".try_value_or_lazy_evaluated_optional"));
@@ -3928,8 +3928,8 @@ String output = String("JaktInternal::arithmetic_shift_right(");
 return (output);
 }
 if ((((op).index() == 21 /* Assign */) && ((lhs)->index() == 13 /* IndexedDictionary */))){
-NonnullRefPtr<types::CheckedExpression> const expr = (lhs->get<types::CheckedExpression::IndexedDictionary>()).expr;
-NonnullRefPtr<types::CheckedExpression> const index = (lhs->get<types::CheckedExpression::IndexedDictionary>()).index;
+NonnullRefPtr<types::CheckedExpression> const expr = ((lhs)->get<types::CheckedExpression::IndexedDictionary>()).expr;
+NonnullRefPtr<types::CheckedExpression> const index = ((lhs)->get<types::CheckedExpression::IndexedDictionary>()).index;
 return (TRY((String::formatted(String("{}({}.set({}, {}))"),TRY((((*this).current_error_handler()))),TRY((((*this).codegen_expression(expr)))),TRY((((*this).codegen_expression(index)))),TRY((((*this).codegen_expression(rhs))))))));
 }
 if (((((*this).program))->is_integer(type_id))){
@@ -4948,7 +4948,7 @@ ErrorOr<String> codegen::CodeGenerator::codegen_constructor(NonnullRefPtr<types:
 types::TypeId const type_id = ((function_)->return_type_id);
 NonnullRefPtr<types::Type> const type_ = ((((*this).program))->get_type(type_id));
 if (((type_)->index() == 23 /* Struct */)){
-types::StructId const struct_id = (type_->get<types::Type::Struct>()).value;
+types::StructId const struct_id = ((type_)->get<types::Type::Struct>()).value;
 types::CheckedStruct const structure = ((((*this).program))->get_struct(struct_id));
 String const qualified_name = TRY((((*this).codegen_type_possibly_as_namespace(type_id,true))));
 String output = String("");
@@ -5436,7 +5436,13 @@ types::TypeId const& type_id = __jakt_match_value.type_id;
 if ((!(((args).is_empty())))){
 parser::EnumVariantPatternArgument const arg = ((args)[static_cast<i64>(0LL)]);
 types::CheckedVariable const var = (TRY((((((*this).program))->find_var_in_scope(scope_id,((arg).binding))))).value());
-(output += TRY((String::formatted(String("{} const& {} = __jakt_match_value.value;\n"),TRY((((*this).codegen_type(((var).type_id))))),((arg).binding)))));
+(output += TRY((((*this).codegen_type(((var).type_id))))));
+if ((!(((var).is_mutable)))){
+(output += String(" const"));
+}
+(output += String("& "));
+(output += ((arg).binding));
+(output += String(" = __jakt_match_value.value;\n"));
 }
 }
 return JaktInternal::ExplicitValue<void>();
@@ -5458,7 +5464,10 @@ parser::EnumVariantPatternArgument arg = (_magic_value.value());
 {
 types::CheckedVariable const var = (TRY((((((*this).program))->find_var_in_scope(scope_id,((arg).binding))))).value());
 (output += TRY((((*this).codegen_type(((var).type_id))))));
-(output += String(" const& "));
+if ((!(((var).is_mutable)))){
+(output += String(" const"));
+}
+(output += String("& "));
 (output += ((arg).binding));
 (output += String(" = __jakt_match_value."));
 (output += ((((arg).name)).value_or(((arg).binding))));
@@ -5534,7 +5543,7 @@ codegen::ControlFlowState const last_control_flow = ((*this).control_flow_state)
 String output = String("");
 NonnullRefPtr<types::Type> const expr_type = ((((*this).program))->get_type(((expr)->type())));
 if (((expr_type)->index() == 24 /* Enum */)){
-types::EnumId const enum_id = (expr_type->get<types::Type::Enum>()).value;
+types::EnumId const enum_id = ((expr_type)->get<types::Type::Enum>()).value;
 (output += TRY((((*this).codegen_enum_match(((((*this).program))->get_enum(enum_id)),expr,match_cases,type_id,all_variants_constant)))));
 }
 else {
@@ -6437,7 +6446,7 @@ ErrorOr<String> codegen::CodeGenerator::codegen_constructor_predecl(NonnullRefPt
 types::TypeId const type_id = ((function_)->return_type_id);
 NonnullRefPtr<types::Type> const type_ = ((((*this).program))->get_type(type_id));
 if (((type_)->index() == 23 /* Struct */)){
-types::StructId const struct_id = (type_->get<types::Type::Struct>()).value;
+types::StructId const struct_id = ((type_)->get<types::Type::Struct>()).value;
 types::CheckedStruct const structure = ((((*this).program))->get_struct(struct_id));
 if (((((structure).record_type)).index() == 1 /* Class */)){
 String output = String("");

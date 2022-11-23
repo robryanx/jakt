@@ -12928,7 +12928,7 @@ case 21: {
 auto&& __jakt_match_value = __jakt_match_variant.template get<types::ValueImpl::JaktSet>();types::TypeId const& type_id = __jakt_match_value.type_id;
 {
 if (((((((*this).program))->get_type(type_id)))->index() == 19 /* GenericInstance */)){
-JaktInternal::Array<types::TypeId> const generic_parameters = (((((*this).program))->get_type(type_id))->get<types::Type::GenericInstance>()).args;
+JaktInternal::Array<types::TypeId> const generic_parameters = ((((((*this).program))->get_type(type_id)))->get<types::Type::GenericInstance>()).args;
 TRY((((effective_namespace).push(types::ResolvedNamespace(String("Set"),generic_parameters)))));
 }
 else {
@@ -13140,7 +13140,7 @@ utility::Span const& span = __jakt_match_value.span;
 {
 interpreter::StatementResult const result = TRY((((*this).execute_expression(expr,scope))));
 if (((result).index() == 5 /* JustValue */)){
-types::Value const value = (result.get<interpreter::StatementResult::JustValue>()).value;
+types::Value const value = ((result).get<interpreter::StatementResult::JustValue>()).value;
 return ( interpreter::StatementResult { typename interpreter::StatementResult::JustValue(types::Value(TRY((types::ValueImpl::template create<typename types::ValueImpl::OptionalSome>(value))),span)) } );
 }
 return (result);
@@ -14119,7 +14119,7 @@ __jakt_var_276 = JAKT_RESOLVE_EXPLICIT_VALUE_OR_CONTROL_FLOW_RETURN_ONLY(([&]() 
 auto __jakt_enum_value = (((((value).impl))->index() == 25 /* JaktTuple */));
 if (__jakt_enum_value == true) {
 return JaktInternal::ExplicitValue(({ Optional<interpreter::StatementResult> __jakt_var_277; {
-JaktInternal::Array<types::Value> const fields = (((value).impl)->get<types::ValueImpl::JaktTuple>()).fields;
+JaktInternal::Array<types::Value> const fields = ((((value).impl))->get<types::ValueImpl::JaktTuple>()).fields;
 __jakt_var_277 =  interpreter::StatementResult { typename interpreter::StatementResult::JustValue(((fields)[index])) } ; goto __jakt_label_275;
 
 }
@@ -15091,8 +15091,8 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<types::CheckedStat
 NonnullRefPtr<types::CheckedStatement> const& var_decl = __jakt_match_value.var_decl;
 {
 if (((var_decl)->index() == 3 /* VarDecl */)){
-types::VarId const var_id = (var_decl->get<types::CheckedStatement::VarDecl>()).var_id;
-NonnullRefPtr<types::CheckedExpression> const init = (var_decl->get<types::CheckedStatement::VarDecl>()).init;
+types::VarId const var_id = ((var_decl)->get<types::CheckedStatement::VarDecl>()).var_id;
+NonnullRefPtr<types::CheckedExpression> const init = ((var_decl)->get<types::CheckedStatement::VarDecl>()).init;
 JAKT_RESOLVE_EXPLICIT_VALUE_OR_CONTROL_FLOW_RETURN_ONLY(([&]() -> JaktInternal::ExplicitValueOrControlFlow<void, ErrorOr<interpreter::StatementResult>>{
 auto&& __jakt_match_variant = TRY((((*this).execute_expression(init,scope))));
 switch(__jakt_match_variant.index()) {
@@ -15154,8 +15154,8 @@ break;
 NonnullRefPtr<types::CheckedStatement> var = (_magic_value.value());
 {
 if (((var)->index() == 3 /* VarDecl */)){
-types::VarId const var_id = (var->get<types::CheckedStatement::VarDecl>()).var_id;
-NonnullRefPtr<types::CheckedExpression> const init = (var->get<types::CheckedStatement::VarDecl>()).init;
+types::VarId const var_id = ((var)->get<types::CheckedStatement::VarDecl>()).var_id;
+NonnullRefPtr<types::CheckedExpression> const init = ((var)->get<types::CheckedStatement::VarDecl>()).init;
 JAKT_RESOLVE_EXPLICIT_VALUE_OR_CONTROL_FLOW_AT_LOOP(([&]() -> JaktInternal::ExplicitValueOrControlFlow<void, ErrorOr<interpreter::StatementResult>>{
 auto&& __jakt_match_variant = TRY((((*this).execute_expression(init,scope))));
 switch(__jakt_match_variant.index()) {
@@ -15521,7 +15521,7 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<typename interpret
 types::Value const& x = __jakt_match_value.value;
 {
 if (((((x).impl))->index() == 1 /* Bool */)){
-bool const cond = (((x).impl)->get<types::ValueImpl::Bool>()).value;
+bool const cond = ((((x).impl))->get<types::ValueImpl::Bool>()).value;
 if ((!(cond))){
 return JaktInternal::LoopBreak{};
 }
@@ -15888,7 +15888,7 @@ case 21: {
 auto&& __jakt_match_value = __jakt_match_variant.template get<types::ValueImpl::JaktSet>();types::TypeId const& type_id = __jakt_match_value.type_id;
 {
 if (((((((*this).program))->get_type(type_id)))->index() == 19 /* GenericInstance */)){
-JaktInternal::Array<types::TypeId> const generic_parameters = (((((*this).program))->get_type(type_id))->get<types::Type::GenericInstance>()).args;
+JaktInternal::Array<types::TypeId> const generic_parameters = ((((((*this).program))->get_type(type_id)))->get<types::Type::GenericInstance>()).args;
 TRY((((effective_namespace).push(types::ResolvedNamespace(String("Set"),generic_parameters)))));
 }
 else {

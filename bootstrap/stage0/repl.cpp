@@ -509,7 +509,7 @@ return {};
 }
 __jakt_var_640.release_value(); });
 if (((line_result).index() == 0 /* Line */)){
-String const line = (line_result.get<repl::LineResult::Line>()).value;
+String const line = ((line_result).get<repl::LineResult::Line>()).value;
 if ((line == String(".exit\n"))){
 break;
 }

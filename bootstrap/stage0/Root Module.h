@@ -14,6 +14,7 @@
 #include "typechecker.h"
 #include "types.h"
 #include "repl.h"
+#include "project.h"
 #include "ide.h"
 #include "path.h"
 #include "os.h"

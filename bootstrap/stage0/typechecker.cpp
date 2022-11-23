@@ -650,8 +650,8 @@ TRY((((output).push(checked_value))));
 
 if ((((inner_type_id).equals(types::unknown_type_id())) && (((type_hint).has_value()) && (!((((type_hint.value())).equals(types::unknown_type_id()))))))){
 if (((((*this).get_type((type_hint.value()))))->index() == 19 /* GenericInstance */)){
-types::StructId const id = (((*this).get_type((type_hint.value())))->get<types::Type::GenericInstance>()).id;
-JaktInternal::Array<types::TypeId> const args = (((*this).get_type((type_hint.value())))->get<types::Type::GenericInstance>()).args;
+types::StructId const id = ((((*this).get_type((type_hint.value()))))->get<types::Type::GenericInstance>()).id;
+JaktInternal::Array<types::TypeId> const args = ((((*this).get_type((type_hint.value()))))->get<types::Type::GenericInstance>()).args;
 if (((id).equals(set_struct_id))){
 (inner_type_id = ((args)[static_cast<i64>(0LL)]));
 }
@@ -676,7 +676,7 @@ return (TRY((types::CheckedExpression::template create<typename types::CheckedEx
 bool typechecker::Typechecker::is_struct(types::TypeId const type_id) const {
 {
 if (((((*this).get_type(type_id)))->index() == 23 /* Struct */)){
-types::StructId const struct_id = (((*this).get_type(type_id))->get<types::Type::Struct>()).value;
+types::StructId const struct_id = ((((*this).get_type(type_id)))->get<types::Type::Struct>()).value;
 return (((((((*this).get_struct(struct_id))).record_type)).index() == 0 /* Struct */));
 }
 else {
@@ -1190,11 +1190,11 @@ if (((this_expr).has_value())){
 auto __jakt_var_305 = [&]() -> ErrorOr<void> {{
 interpreter::StatementResult const evaluated_this = TRY((((interpreter)->execute_expression((this_expr.value()),eval_scope))));
 if (((evaluated_this).index() == 5 /* JustValue */)){
-types::Value const value = (evaluated_this.get<interpreter::StatementResult::JustValue>()).value;
+types::Value const value = ((evaluated_this).get<interpreter::StatementResult::JustValue>()).value;
 (this_argument = value);
 }
 else if (((evaluated_this).index() == 1 /* Throw */)){
-types::Value const value = (evaluated_this.get<interpreter::StatementResult::Throw>()).value;
+types::Value const value = ((evaluated_this).get<interpreter::StatementResult::Throw>()).value;
 TRY((((*this).error(TRY((String::formatted(String("Error executing this expression (evaluation threw {})"),value))),(((this_expr.value()))->span())))));
 }
 else {
@@ -1648,7 +1648,7 @@ TRY((((*this).error(TRY((String::formatted(String("Match case ‘{}’ must have
 else {
 parser::EnumVariantPatternArgument const variant_argument = ((variant_arguments)[static_cast<i64>(0LL)]);
 types::TypeId const variable_type_id = TRY((((*this).substitute_typevars_in_type(type_id,((*this).generic_inferences)))));
-types::VarId const var_id = TRY((((module)->add_variable(types::CheckedVariable(((variant_argument).binding),variable_type_id,false,span,JaktInternal::OptionalNone(), types::CheckedVisibility { typename types::CheckedVisibility::Public() } )))));
+types::VarId const var_id = TRY((((module)->add_variable(types::CheckedVariable(((variant_argument).binding),variable_type_id,((variant_argument).is_mutable),span,JaktInternal::OptionalNone(), types::CheckedVisibility { typename types::CheckedVisibility::Public() } )))));
 TRY((((*this).add_var_to_scope(new_scope_id,((variant_argument).binding),var_id,span))));
 }
 
@@ -1756,29 +1756,19 @@ if ((((var).name) == arg_name)){
 }
 }
 
-JAKT_RESOLVE_EXPLICIT_VALUE_OR_CONTROL_FLOW_AT_LOOP(([&]() -> JaktInternal::ExplicitValueOrControlFlow<void,ErrorOr<JaktInternal::Tuple<JaktInternal::Optional<String>,types::CheckedMatchCase,JaktInternal::Optional<types::TypeId>>>>{
-auto __jakt_enum_value = (((matched_field_variable).has_value()));
-if (__jakt_enum_value == true) {
-{
+if (((matched_field_variable).has_value())){
 types::TypeId const substituted_type_id = TRY((((*this).substitute_typevars_in_type((((matched_field_variable.value())).type_id),((*this).generic_inferences)))));
 utility::Span const matched_span = (((matched_field_variable.value())).definition_span);
 if (((*this).dump_type_hints)){
 TRY((((*this).dump_type_hint((((matched_field_variable.value())).type_id),((arg).span)))));
 }
-types::VarId const var_id = TRY((((module)->add_variable(types::CheckedVariable(((arg).binding),substituted_type_id,false,matched_span,JaktInternal::OptionalNone(), types::CheckedVisibility { typename types::CheckedVisibility::Public() } )))));
+types::VarId const var_id = TRY((((module)->add_variable(types::CheckedVariable(((arg).binding),substituted_type_id,((arg).is_mutable),matched_span,JaktInternal::OptionalNone(), types::CheckedVisibility { typename types::CheckedVisibility::Public() } )))));
 TRY((((*this).add_var_to_scope(new_scope_id,((arg).binding),var_id,matched_span))));
 }
-return JaktInternal::ExplicitValue<void>();
-}
 else {
-{
 TRY((((*this).error(TRY((String::formatted(String("Match case argument '{}' does not exist in struct-like enum variant '{}'"),arg_name,name))),((arg).span)))));
 }
-return JaktInternal::ExplicitValue<void>();
-}
-return JaktInternal::ExplicitValue<void>();
-}()))
-;
+
 }
 
 }
@@ -1863,8 +1853,8 @@ types::StructId const tuple_struct_id = TRY((((*this).find_struct_in_prelude(Str
 types::StructId const optional_struct_id = TRY((((*this).find_struct_in_prelude(String("Optional")))));
 types::TypeId expr_type_id = types::unknown_type_id();
 if (((((*this).get_type(((checked_expr)->type()))))->index() == 19 /* GenericInstance */)){
-types::StructId const id = (((*this).get_type(((checked_expr)->type())))->get<types::Type::GenericInstance>()).id;
-JaktInternal::Array<types::TypeId> const args = (((*this).get_type(((checked_expr)->type())))->get<types::Type::GenericInstance>()).args;
+types::StructId const id = ((((*this).get_type(((checked_expr)->type()))))->get<types::Type::GenericInstance>()).id;
+JaktInternal::Array<types::TypeId> const args = ((((*this).get_type(((checked_expr)->type()))))->get<types::Type::GenericInstance>()).args;
 if (((id).equals(tuple_struct_id))){
 if (is_optional){
 TRY((((*this).error(String("Optional chaining is not allowed on a non-optional tuple type"),span))));
@@ -1880,8 +1870,8 @@ else {
 else if ((is_optional && ((id).equals(optional_struct_id)))){
 types::TypeId const inner_type_id = ((args)[static_cast<i64>(0LL)]);
 if (((((*this).get_type(inner_type_id)))->index() == 19 /* GenericInstance */)){
-types::StructId const id = (((*this).get_type(inner_type_id))->get<types::Type::GenericInstance>()).id;
-JaktInternal::Array<types::TypeId> const args = (((*this).get_type(inner_type_id))->get<types::Type::GenericInstance>()).args;
+types::StructId const id = ((((*this).get_type(inner_type_id)))->get<types::Type::GenericInstance>()).id;
+JaktInternal::Array<types::TypeId> const args = ((((*this).get_type(inner_type_id)))->get<types::Type::GenericInstance>()).args;
 if (((id).equals(tuple_struct_id))){
 if ((index >= ((args).size()))){
 TRY((((*this).error(String("Optional-chained tuple index past the end of the tuple"),span))));
@@ -2321,7 +2311,7 @@ return JaktInternal::ExplicitValue(false);
 JaktInternal::Array<types::CheckedField> checked_fields = (TRY((Array<types::CheckedField>::create_with({}))));
 JaktInternal::Set<String> seen_fields = (TRY((Set<String>::create_with_values({}))));
 if (((((parsed_record).record_type)).index() == 3 /* SumEnum */)){
-JaktInternal::Array<parser::ParsedField> const fields = (((parsed_record).record_type).get<parser::RecordType::SumEnum>()).fields;
+JaktInternal::Array<parser::ParsedField> const fields = ((((parsed_record).record_type)).get<parser::RecordType::SumEnum>()).fields;
 {
 JaktInternal::ArrayIterator<parser::ParsedField> _magic = ((fields).iterator());
 for (;;){
@@ -2553,11 +2543,11 @@ types::StructId const optional_struct_id = TRY((((*this).find_struct_in_prelude(
 NonnullRefPtr<types::Type> const lhs_type = ((*this).get_type(lhs_type_id));
 TRY((((*this).check_that_type_doesnt_contain_reference(lhs_type_id,span))));
 if (((checked_expr)->index() == 23 /* OptionalNone */)){
-utility::Span const span = (checked_expr->get<types::CheckedExpression::OptionalNone>()).span;
-types::TypeId const type_id = (checked_expr->get<types::CheckedExpression::OptionalNone>()).type_id;
+utility::Span const span = ((checked_expr)->get<types::CheckedExpression::OptionalNone>()).span;
+types::TypeId const type_id = ((checked_expr)->get<types::CheckedExpression::OptionalNone>()).type_id;
 if (((lhs_type)->index() == 19 /* GenericInstance */)){
-types::StructId const id = (lhs_type->get<types::Type::GenericInstance>()).id;
-JaktInternal::Array<types::TypeId> const args = (lhs_type->get<types::Type::GenericInstance>()).args;
+types::StructId const id = ((lhs_type)->get<types::Type::GenericInstance>()).id;
+JaktInternal::Array<types::TypeId> const args = ((lhs_type)->get<types::Type::GenericInstance>()).args;
 if ((!((((id).equals(optional_struct_id)) || ((id).equals(weak_ptr_struct_id)))))){
 TRY((((*this).error(String("Cannot assign None to a non-optional type"),span))));
 }
@@ -2568,8 +2558,8 @@ TRY((((*this).error(String("Cannot assign None to a non-optional type"),span))))
 
 }
 if (((lhs_type)->index() == 19 /* GenericInstance */)){
-types::StructId const id = (lhs_type->get<types::Type::GenericInstance>()).id;
-JaktInternal::Array<types::TypeId> const args = (lhs_type->get<types::Type::GenericInstance>()).args;
+types::StructId const id = ((lhs_type)->get<types::Type::GenericInstance>()).id;
+JaktInternal::Array<types::TypeId> const args = ((lhs_type)->get<types::Type::GenericInstance>()).args;
 if (((id).equals(weak_ptr_struct_id))){
 if ((!(((var).is_mutable)))){
 TRY((((*this).error(String("Weak reference must be mutable"),((var).span)))));
@@ -3455,8 +3445,9 @@ JaktInternal::Tuple<String,utility::Span> const module_name_module_span_ = (modu
 String const module_name = ((module_name_module_span_).get<0>());
 utility::Span const module_span = ((module_name_module_span_).get<1>());
 
+String const sanitized_module_name = TRY((((module_name).replace(String(":"),String("_")))));
 types::ModuleId imported_module_id = types::ModuleId(static_cast<size_t>(0ULL));
-JaktInternal::Optional<types::LoadedModule> maybe_loaded_module = ((((*this).program))->get_loaded_module(module_name));
+JaktInternal::Optional<types::LoadedModule> maybe_loaded_module = ((((*this).program))->get_loaded_module(sanitized_module_name));
 if ((!(((maybe_loaded_module).has_value())))){
 JaktInternal::Optional<path::Path> const maybe_file_name = TRY((((((*this).compiler))->search_for_path(module_name))));
 path::Path const file_name = JAKT_RESOLVE_EXPLICIT_VALUE_OR_CONTROL_FLOW_RETURN_ONLY(([&]() -> JaktInternal::ExplicitValueOrControlFlow<path::Path,ErrorOr<void>>{
@@ -3476,7 +3467,6 @@ TRY((((*this).error(TRY((String::formatted(String("Module '{}' not found"),modul
 return {};
 }
 types::ModuleId const original_current_module_id = ((*this).current_module_id);
-String const sanitized_module_name = TRY((((module_name).replace(String(":"),String("_")))));
 (imported_module_id = TRY((((*this).create_module(sanitized_module_name,false,((file_name).to_string()))))));
 TRY((((((*this).program))->set_loaded_module(sanitized_module_name,types::LoadedModule(imported_module_id,file_id)))));
 (((*this).current_module_id) = imported_module_id);
@@ -3635,7 +3625,7 @@ TRY((((*this).add_trait_to_scope(scope_id,name,trait_id,((((import_).module_name
 
 }
 else if (((((import_).import_list)).index() == 0 /* List */)){
-JaktInternal::Array<parser::ImportName> const names = (((import_).import_list).get<parser::ImportList::List>()).value;
+JaktInternal::Array<parser::ImportName> const names = ((((import_).import_list)).get<parser::ImportList::List>()).value;
 types::ScopeId const import_scope_id = types::ScopeId(imported_module_id,static_cast<size_t>(0ULL));
 {
 JaktInternal::ArrayIterator<parser::ImportName> _magic = ((names).iterator());
@@ -3700,8 +3690,8 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<typename parser::B
 {
 if (((op).index() == 32 /* NoneCoalescingAssign */)){
 if (((checked_lhs)->index() == 22 /* Var */)){
-types::CheckedVariable const var = (checked_lhs->get<types::CheckedExpression::Var>()).var;
-utility::Span const span = (checked_lhs->get<types::CheckedExpression::Var>()).span;
+types::CheckedVariable const var = ((checked_lhs)->get<types::CheckedExpression::Var>()).var;
+utility::Span const span = ((checked_lhs)->get<types::CheckedExpression::Var>()).span;
 if ((!(((var).is_mutable)))){
 TRY((((*this).error_with_hint(String("left-hand side of ??= must be a mutable variable"),span,String("This variable isn't marked as mutable"),((var).definition_span)))));
 return (types::unknown_type_id());
@@ -3714,8 +3704,8 @@ return (types::unknown_type_id());
 
 }
 if (((((*this).get_type(lhs_type_id)))->index() == 19 /* GenericInstance */)){
-types::StructId const id = (((*this).get_type(lhs_type_id))->get<types::Type::GenericInstance>()).id;
-JaktInternal::Array<types::TypeId> const args = (((*this).get_type(lhs_type_id))->get<types::Type::GenericInstance>()).args;
+types::StructId const id = ((((*this).get_type(lhs_type_id)))->get<types::Type::GenericInstance>()).id;
+JaktInternal::Array<types::TypeId> const args = ((((*this).get_type(lhs_type_id)))->get<types::Type::GenericInstance>()).args;
 if (((id).equals(TRY((((*this).find_struct_in_prelude(String("Optional")))))))){
 if (((lhs_type_id).equals(rhs_type_id))){
 return (lhs_type_id);
@@ -3744,8 +3734,8 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<typename parser::B
 {
 if (((op).index() == 32 /* NoneCoalescingAssign */)){
 if (((checked_lhs)->index() == 22 /* Var */)){
-types::CheckedVariable const var = (checked_lhs->get<types::CheckedExpression::Var>()).var;
-utility::Span const span = (checked_lhs->get<types::CheckedExpression::Var>()).span;
+types::CheckedVariable const var = ((checked_lhs)->get<types::CheckedExpression::Var>()).var;
+utility::Span const span = ((checked_lhs)->get<types::CheckedExpression::Var>()).span;
 if ((!(((var).is_mutable)))){
 TRY((((*this).error_with_hint(String("left-hand side of ??= must be a mutable variable"),span,String("This variable isn't marked as mutable"),((var).definition_span)))));
 return (types::unknown_type_id());
@@ -3758,8 +3748,8 @@ return (types::unknown_type_id());
 
 }
 if (((((*this).get_type(lhs_type_id)))->index() == 19 /* GenericInstance */)){
-types::StructId const id = (((*this).get_type(lhs_type_id))->get<types::Type::GenericInstance>()).id;
-JaktInternal::Array<types::TypeId> const args = (((*this).get_type(lhs_type_id))->get<types::Type::GenericInstance>()).args;
+types::StructId const id = ((((*this).get_type(lhs_type_id)))->get<types::Type::GenericInstance>()).id;
+JaktInternal::Array<types::TypeId> const args = ((((*this).get_type(lhs_type_id)))->get<types::Type::GenericInstance>()).args;
 if (((id).equals(TRY((((*this).find_struct_in_prelude(String("Optional")))))))){
 if (((lhs_type_id).equals(rhs_type_id))){
 return (lhs_type_id);
@@ -3877,11 +3867,11 @@ TRY((((*this).error(String("Assignment to immutable variable"),((checked_lhs)->s
 return (lhs_type_id);
 }
 if (((checked_rhs)->index() == 23 /* OptionalNone */)){
-utility::Span const span = (checked_rhs->get<types::CheckedExpression::OptionalNone>()).span;
-types::TypeId const type_id = (checked_rhs->get<types::CheckedExpression::OptionalNone>()).type_id;
+utility::Span const span = ((checked_rhs)->get<types::CheckedExpression::OptionalNone>()).span;
+types::TypeId const type_id = ((checked_rhs)->get<types::CheckedExpression::OptionalNone>()).type_id;
 if (((((*this).get_type(lhs_type_id)))->index() == 19 /* GenericInstance */)){
-types::StructId const id = (((*this).get_type(lhs_type_id))->get<types::Type::GenericInstance>()).id;
-JaktInternal::Array<types::TypeId> const args = (((*this).get_type(lhs_type_id))->get<types::Type::GenericInstance>()).args;
+types::StructId const id = ((((*this).get_type(lhs_type_id)))->get<types::Type::GenericInstance>()).id;
+JaktInternal::Array<types::TypeId> const args = ((((*this).get_type(lhs_type_id)))->get<types::Type::GenericInstance>()).args;
 if (((id).equals(TRY((((*this).find_struct_in_prelude(String("Optional")))))))){
 return (lhs_type_id);
 }
@@ -3896,8 +3886,8 @@ TRY((((*this).error(String("Cannot assign None to a non-optional type"),span))))
 }
 NonnullRefPtr<types::Type> const lhs_type = ((*this).get_type(lhs_type_id));
 if (((lhs_type)->index() == 19 /* GenericInstance */)){
-types::StructId const id = (lhs_type->get<types::Type::GenericInstance>()).id;
-JaktInternal::Array<types::TypeId> const args = (lhs_type->get<types::Type::GenericInstance>()).args;
+types::StructId const id = ((lhs_type)->get<types::Type::GenericInstance>()).id;
+JaktInternal::Array<types::TypeId> const args = ((lhs_type)->get<types::Type::GenericInstance>()).args;
 if (((((((((*this).program))->get_struct(id))).name) == String("Optional")) && ((((checked_rhs)->type())).equals(((args)[static_cast<i64>(0LL)]))))){
 return (lhs_type_id);
 }
@@ -3918,12 +3908,12 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<typename parser::B
 {
 types::StructId const weak_ptr_struct_id = TRY((((*this).find_struct_in_prelude(String("WeakPtr")))));
 if (((((*this).get_type(lhs_type_id)))->index() == 19 /* GenericInstance */)){
-types::StructId const id = (((*this).get_type(lhs_type_id))->get<types::Type::GenericInstance>()).id;
-JaktInternal::Array<types::TypeId> const args = (((*this).get_type(lhs_type_id))->get<types::Type::GenericInstance>()).args;
+types::StructId const id = ((((*this).get_type(lhs_type_id)))->get<types::Type::GenericInstance>()).id;
+JaktInternal::Array<types::TypeId> const args = ((((*this).get_type(lhs_type_id)))->get<types::Type::GenericInstance>()).args;
 if ((((id).equals(weak_ptr_struct_id)) && ((((*this).get_type(((args)[static_cast<i64>(0LL)]))))->index() == 23 /* Struct */))){
-types::StructId const lhs_struct_id = (((*this).get_type(((args)[static_cast<i64>(0LL)])))->get<types::Type::Struct>()).value;
+types::StructId const lhs_struct_id = ((((*this).get_type(((args)[static_cast<i64>(0LL)]))))->get<types::Type::Struct>()).value;
 if (((((*this).get_type(rhs_type_id)))->index() == 23 /* Struct */)){
-types::StructId const rhs_struct_id = (((*this).get_type(rhs_type_id))->get<types::Type::Struct>()).value;
+types::StructId const rhs_struct_id = ((((*this).get_type(rhs_type_id)))->get<types::Type::Struct>()).value;
 if (((lhs_struct_id).equals(rhs_struct_id))){
 return (lhs_type_id);
 }
@@ -3945,12 +3935,12 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<typename parser::B
 {
 types::StructId const weak_ptr_struct_id = TRY((((*this).find_struct_in_prelude(String("WeakPtr")))));
 if (((((*this).get_type(lhs_type_id)))->index() == 19 /* GenericInstance */)){
-types::StructId const id = (((*this).get_type(lhs_type_id))->get<types::Type::GenericInstance>()).id;
-JaktInternal::Array<types::TypeId> const args = (((*this).get_type(lhs_type_id))->get<types::Type::GenericInstance>()).args;
+types::StructId const id = ((((*this).get_type(lhs_type_id)))->get<types::Type::GenericInstance>()).id;
+JaktInternal::Array<types::TypeId> const args = ((((*this).get_type(lhs_type_id)))->get<types::Type::GenericInstance>()).args;
 if ((((id).equals(weak_ptr_struct_id)) && ((((*this).get_type(((args)[static_cast<i64>(0LL)]))))->index() == 23 /* Struct */))){
-types::StructId const lhs_struct_id = (((*this).get_type(((args)[static_cast<i64>(0LL)])))->get<types::Type::Struct>()).value;
+types::StructId const lhs_struct_id = ((((*this).get_type(((args)[static_cast<i64>(0LL)]))))->get<types::Type::Struct>()).value;
 if (((((*this).get_type(rhs_type_id)))->index() == 23 /* Struct */)){
-types::StructId const rhs_struct_id = (((*this).get_type(rhs_type_id))->get<types::Type::Struct>()).value;
+types::StructId const rhs_struct_id = ((((*this).get_type(rhs_type_id)))->get<types::Type::Struct>()).value;
 if (((lhs_struct_id).equals(rhs_struct_id))){
 return (lhs_type_id);
 }
@@ -3972,12 +3962,12 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<typename parser::B
 {
 types::StructId const weak_ptr_struct_id = TRY((((*this).find_struct_in_prelude(String("WeakPtr")))));
 if (((((*this).get_type(lhs_type_id)))->index() == 19 /* GenericInstance */)){
-types::StructId const id = (((*this).get_type(lhs_type_id))->get<types::Type::GenericInstance>()).id;
-JaktInternal::Array<types::TypeId> const args = (((*this).get_type(lhs_type_id))->get<types::Type::GenericInstance>()).args;
+types::StructId const id = ((((*this).get_type(lhs_type_id)))->get<types::Type::GenericInstance>()).id;
+JaktInternal::Array<types::TypeId> const args = ((((*this).get_type(lhs_type_id)))->get<types::Type::GenericInstance>()).args;
 if ((((id).equals(weak_ptr_struct_id)) && ((((*this).get_type(((args)[static_cast<i64>(0LL)]))))->index() == 23 /* Struct */))){
-types::StructId const lhs_struct_id = (((*this).get_type(((args)[static_cast<i64>(0LL)])))->get<types::Type::Struct>()).value;
+types::StructId const lhs_struct_id = ((((*this).get_type(((args)[static_cast<i64>(0LL)]))))->get<types::Type::Struct>()).value;
 if (((((*this).get_type(rhs_type_id)))->index() == 23 /* Struct */)){
-types::StructId const rhs_struct_id = (((*this).get_type(rhs_type_id))->get<types::Type::Struct>()).value;
+types::StructId const rhs_struct_id = ((((*this).get_type(rhs_type_id)))->get<types::Type::Struct>()).value;
 if (((lhs_struct_id).equals(rhs_struct_id))){
 return (lhs_type_id);
 }
@@ -3999,12 +3989,12 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<typename parser::B
 {
 types::StructId const weak_ptr_struct_id = TRY((((*this).find_struct_in_prelude(String("WeakPtr")))));
 if (((((*this).get_type(lhs_type_id)))->index() == 19 /* GenericInstance */)){
-types::StructId const id = (((*this).get_type(lhs_type_id))->get<types::Type::GenericInstance>()).id;
-JaktInternal::Array<types::TypeId> const args = (((*this).get_type(lhs_type_id))->get<types::Type::GenericInstance>()).args;
+types::StructId const id = ((((*this).get_type(lhs_type_id)))->get<types::Type::GenericInstance>()).id;
+JaktInternal::Array<types::TypeId> const args = ((((*this).get_type(lhs_type_id)))->get<types::Type::GenericInstance>()).args;
 if ((((id).equals(weak_ptr_struct_id)) && ((((*this).get_type(((args)[static_cast<i64>(0LL)]))))->index() == 23 /* Struct */))){
-types::StructId const lhs_struct_id = (((*this).get_type(((args)[static_cast<i64>(0LL)])))->get<types::Type::Struct>()).value;
+types::StructId const lhs_struct_id = ((((*this).get_type(((args)[static_cast<i64>(0LL)]))))->get<types::Type::Struct>()).value;
 if (((((*this).get_type(rhs_type_id)))->index() == 23 /* Struct */)){
-types::StructId const rhs_struct_id = (((*this).get_type(rhs_type_id))->get<types::Type::Struct>()).value;
+types::StructId const rhs_struct_id = ((((*this).get_type(rhs_type_id)))->get<types::Type::Struct>()).value;
 if (((lhs_struct_id).equals(rhs_struct_id))){
 return (lhs_type_id);
 }
@@ -4026,12 +4016,12 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<typename parser::B
 {
 types::StructId const weak_ptr_struct_id = TRY((((*this).find_struct_in_prelude(String("WeakPtr")))));
 if (((((*this).get_type(lhs_type_id)))->index() == 19 /* GenericInstance */)){
-types::StructId const id = (((*this).get_type(lhs_type_id))->get<types::Type::GenericInstance>()).id;
-JaktInternal::Array<types::TypeId> const args = (((*this).get_type(lhs_type_id))->get<types::Type::GenericInstance>()).args;
+types::StructId const id = ((((*this).get_type(lhs_type_id)))->get<types::Type::GenericInstance>()).id;
+JaktInternal::Array<types::TypeId> const args = ((((*this).get_type(lhs_type_id)))->get<types::Type::GenericInstance>()).args;
 if ((((id).equals(weak_ptr_struct_id)) && ((((*this).get_type(((args)[static_cast<i64>(0LL)]))))->index() == 23 /* Struct */))){
-types::StructId const lhs_struct_id = (((*this).get_type(((args)[static_cast<i64>(0LL)])))->get<types::Type::Struct>()).value;
+types::StructId const lhs_struct_id = ((((*this).get_type(((args)[static_cast<i64>(0LL)]))))->get<types::Type::Struct>()).value;
 if (((((*this).get_type(rhs_type_id)))->index() == 23 /* Struct */)){
-types::StructId const rhs_struct_id = (((*this).get_type(rhs_type_id))->get<types::Type::Struct>()).value;
+types::StructId const rhs_struct_id = ((((*this).get_type(rhs_type_id)))->get<types::Type::Struct>()).value;
 if (((lhs_struct_id).equals(rhs_struct_id))){
 return (lhs_type_id);
 }
@@ -4053,12 +4043,12 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<typename parser::B
 {
 types::StructId const weak_ptr_struct_id = TRY((((*this).find_struct_in_prelude(String("WeakPtr")))));
 if (((((*this).get_type(lhs_type_id)))->index() == 19 /* GenericInstance */)){
-types::StructId const id = (((*this).get_type(lhs_type_id))->get<types::Type::GenericInstance>()).id;
-JaktInternal::Array<types::TypeId> const args = (((*this).get_type(lhs_type_id))->get<types::Type::GenericInstance>()).args;
+types::StructId const id = ((((*this).get_type(lhs_type_id)))->get<types::Type::GenericInstance>()).id;
+JaktInternal::Array<types::TypeId> const args = ((((*this).get_type(lhs_type_id)))->get<types::Type::GenericInstance>()).args;
 if ((((id).equals(weak_ptr_struct_id)) && ((((*this).get_type(((args)[static_cast<i64>(0LL)]))))->index() == 23 /* Struct */))){
-types::StructId const lhs_struct_id = (((*this).get_type(((args)[static_cast<i64>(0LL)])))->get<types::Type::Struct>()).value;
+types::StructId const lhs_struct_id = ((((*this).get_type(((args)[static_cast<i64>(0LL)]))))->get<types::Type::Struct>()).value;
 if (((((*this).get_type(rhs_type_id)))->index() == 23 /* Struct */)){
-types::StructId const rhs_struct_id = (((*this).get_type(rhs_type_id))->get<types::Type::Struct>()).value;
+types::StructId const rhs_struct_id = ((((*this).get_type(rhs_type_id)))->get<types::Type::Struct>()).value;
 if (((lhs_struct_id).equals(rhs_struct_id))){
 return (lhs_type_id);
 }
@@ -4080,12 +4070,12 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<typename parser::B
 {
 types::StructId const weak_ptr_struct_id = TRY((((*this).find_struct_in_prelude(String("WeakPtr")))));
 if (((((*this).get_type(lhs_type_id)))->index() == 19 /* GenericInstance */)){
-types::StructId const id = (((*this).get_type(lhs_type_id))->get<types::Type::GenericInstance>()).id;
-JaktInternal::Array<types::TypeId> const args = (((*this).get_type(lhs_type_id))->get<types::Type::GenericInstance>()).args;
+types::StructId const id = ((((*this).get_type(lhs_type_id)))->get<types::Type::GenericInstance>()).id;
+JaktInternal::Array<types::TypeId> const args = ((((*this).get_type(lhs_type_id)))->get<types::Type::GenericInstance>()).args;
 if ((((id).equals(weak_ptr_struct_id)) && ((((*this).get_type(((args)[static_cast<i64>(0LL)]))))->index() == 23 /* Struct */))){
-types::StructId const lhs_struct_id = (((*this).get_type(((args)[static_cast<i64>(0LL)])))->get<types::Type::Struct>()).value;
+types::StructId const lhs_struct_id = ((((*this).get_type(((args)[static_cast<i64>(0LL)]))))->get<types::Type::Struct>()).value;
 if (((((*this).get_type(rhs_type_id)))->index() == 23 /* Struct */)){
-types::StructId const rhs_struct_id = (((*this).get_type(rhs_type_id))->get<types::Type::Struct>()).value;
+types::StructId const rhs_struct_id = ((((*this).get_type(rhs_type_id)))->get<types::Type::Struct>()).value;
 if (((lhs_struct_id).equals(rhs_struct_id))){
 return (lhs_type_id);
 }
@@ -4107,12 +4097,12 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<typename parser::B
 {
 types::StructId const weak_ptr_struct_id = TRY((((*this).find_struct_in_prelude(String("WeakPtr")))));
 if (((((*this).get_type(lhs_type_id)))->index() == 19 /* GenericInstance */)){
-types::StructId const id = (((*this).get_type(lhs_type_id))->get<types::Type::GenericInstance>()).id;
-JaktInternal::Array<types::TypeId> const args = (((*this).get_type(lhs_type_id))->get<types::Type::GenericInstance>()).args;
+types::StructId const id = ((((*this).get_type(lhs_type_id)))->get<types::Type::GenericInstance>()).id;
+JaktInternal::Array<types::TypeId> const args = ((((*this).get_type(lhs_type_id)))->get<types::Type::GenericInstance>()).args;
 if ((((id).equals(weak_ptr_struct_id)) && ((((*this).get_type(((args)[static_cast<i64>(0LL)]))))->index() == 23 /* Struct */))){
-types::StructId const lhs_struct_id = (((*this).get_type(((args)[static_cast<i64>(0LL)])))->get<types::Type::Struct>()).value;
+types::StructId const lhs_struct_id = ((((*this).get_type(((args)[static_cast<i64>(0LL)]))))->get<types::Type::Struct>()).value;
 if (((((*this).get_type(rhs_type_id)))->index() == 23 /* Struct */)){
-types::StructId const rhs_struct_id = (((*this).get_type(rhs_type_id))->get<types::Type::Struct>()).value;
+types::StructId const rhs_struct_id = ((((*this).get_type(rhs_type_id)))->get<types::Type::Struct>()).value;
 if (((lhs_struct_id).equals(rhs_struct_id))){
 return (lhs_type_id);
 }
@@ -4134,12 +4124,12 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<typename parser::B
 {
 types::StructId const weak_ptr_struct_id = TRY((((*this).find_struct_in_prelude(String("WeakPtr")))));
 if (((((*this).get_type(lhs_type_id)))->index() == 19 /* GenericInstance */)){
-types::StructId const id = (((*this).get_type(lhs_type_id))->get<types::Type::GenericInstance>()).id;
-JaktInternal::Array<types::TypeId> const args = (((*this).get_type(lhs_type_id))->get<types::Type::GenericInstance>()).args;
+types::StructId const id = ((((*this).get_type(lhs_type_id)))->get<types::Type::GenericInstance>()).id;
+JaktInternal::Array<types::TypeId> const args = ((((*this).get_type(lhs_type_id)))->get<types::Type::GenericInstance>()).args;
 if ((((id).equals(weak_ptr_struct_id)) && ((((*this).get_type(((args)[static_cast<i64>(0LL)]))))->index() == 23 /* Struct */))){
-types::StructId const lhs_struct_id = (((*this).get_type(((args)[static_cast<i64>(0LL)])))->get<types::Type::Struct>()).value;
+types::StructId const lhs_struct_id = ((((*this).get_type(((args)[static_cast<i64>(0LL)]))))->get<types::Type::Struct>()).value;
 if (((((*this).get_type(rhs_type_id)))->index() == 23 /* Struct */)){
-types::StructId const rhs_struct_id = (((*this).get_type(rhs_type_id))->get<types::Type::Struct>()).value;
+types::StructId const rhs_struct_id = ((((*this).get_type(rhs_type_id)))->get<types::Type::Struct>()).value;
 if (((lhs_struct_id).equals(rhs_struct_id))){
 return (lhs_type_id);
 }
@@ -4161,12 +4151,12 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<typename parser::B
 {
 types::StructId const weak_ptr_struct_id = TRY((((*this).find_struct_in_prelude(String("WeakPtr")))));
 if (((((*this).get_type(lhs_type_id)))->index() == 19 /* GenericInstance */)){
-types::StructId const id = (((*this).get_type(lhs_type_id))->get<types::Type::GenericInstance>()).id;
-JaktInternal::Array<types::TypeId> const args = (((*this).get_type(lhs_type_id))->get<types::Type::GenericInstance>()).args;
+types::StructId const id = ((((*this).get_type(lhs_type_id)))->get<types::Type::GenericInstance>()).id;
+JaktInternal::Array<types::TypeId> const args = ((((*this).get_type(lhs_type_id)))->get<types::Type::GenericInstance>()).args;
 if ((((id).equals(weak_ptr_struct_id)) && ((((*this).get_type(((args)[static_cast<i64>(0LL)]))))->index() == 23 /* Struct */))){
-types::StructId const lhs_struct_id = (((*this).get_type(((args)[static_cast<i64>(0LL)])))->get<types::Type::Struct>()).value;
+types::StructId const lhs_struct_id = ((((*this).get_type(((args)[static_cast<i64>(0LL)]))))->get<types::Type::Struct>()).value;
 if (((((*this).get_type(rhs_type_id)))->index() == 23 /* Struct */)){
-types::StructId const rhs_struct_id = (((*this).get_type(rhs_type_id))->get<types::Type::Struct>()).value;
+types::StructId const rhs_struct_id = ((((*this).get_type(rhs_type_id)))->get<types::Type::Struct>()).value;
 if (((lhs_struct_id).equals(rhs_struct_id))){
 return (lhs_type_id);
 }
@@ -4638,10 +4628,10 @@ break;
 NonnullRefPtr<parser::ParsedStatement> statement = (_magic_value.value());
 {
 if (((statement)->index() == 0 /* Expression */)){
-NonnullRefPtr<parser::ParsedExpression> const expr = (statement->get<parser::ParsedStatement::Expression>()).expr;
+NonnullRefPtr<parser::ParsedExpression> const expr = ((statement)->get<parser::ParsedStatement::Expression>()).expr;
 if (((expr)->index() == 2 /* QuotedString */)){
-String const val = (expr->get<parser::ParsedExpression::QuotedString>()).val;
-utility::Span const span = (expr->get<parser::ParsedExpression::QuotedString>()).span;
+String const val = ((expr)->get<parser::ParsedExpression::QuotedString>()).val;
+utility::Span const span = ((expr)->get<parser::ParsedExpression::QuotedString>()).span;
 TRY((((strings).push(val))));
 }
 else {
@@ -4708,7 +4698,7 @@ NonnullRefPtr<types::MaybeResolvedScope> scope = (_magic_value.value());
 {
 NonnullRefPtr<types::MaybeResolvedScope> const resolved_scope = TRY((((scope)->try_resolve(((*this).program)))));
 if (((resolved_scope)->index() == 0 /* Resolved */)){
-types::ScopeId const scope_id = (resolved_scope->get<types::MaybeResolvedScope::Resolved>()).value;
+types::ScopeId const scope_id = ((resolved_scope)->get<types::MaybeResolvedScope::Resolved>()).value;
 if (TRY((((*this).scope_can_access(most_specific_active_scope_id,scope_id))))){
 return (true);
 }
@@ -5009,8 +4999,8 @@ types::TypeId const type_id = (((this_expr.value()))->type());
 (maybe_this_type_id = type_id);
 NonnullRefPtr<types::Type> const param_type = ((*this).get_type(type_id));
 if (((param_type)->index() == 19 /* GenericInstance */)){
-types::StructId const id = (param_type->get<types::Type::GenericInstance>()).id;
-JaktInternal::Array<types::TypeId> const args = (param_type->get<types::Type::GenericInstance>()).args;
+types::StructId const id = ((param_type)->get<types::Type::GenericInstance>()).id;
+JaktInternal::Array<types::TypeId> const args = ((param_type)->get<types::Type::GenericInstance>()).args;
 types::CheckedStruct const structure = ((*this).get_struct(id));
 {
 JaktInternal::Range<size_t> _magic = (JaktInternal::Range<size_t>{static_cast<size_t>(static_cast<size_t>(0ULL)),static_cast<size_t>(((((structure).generic_parameters)).size()))});
@@ -5124,8 +5114,8 @@ utility::Span const& span = __jakt_match_value.span;
 return JaktInternal::ExplicitValue(({ Optional<NonnullRefPtr<types::CheckedExpression>> __jakt_var_348; {
 JaktInternal::Optional<types::TypeId> type_hint_unwrapped = type_hint;
 if ((((type_hint).has_value()) && ((((*this).get_type((type_hint.value()))))->index() == 19 /* GenericInstance */))){
-types::StructId const id = (((*this).get_type((type_hint.value())))->get<types::Type::GenericInstance>()).id;
-JaktInternal::Array<types::TypeId> const args = (((*this).get_type((type_hint.value())))->get<types::Type::GenericInstance>()).args;
+types::StructId const id = ((((*this).get_type((type_hint.value()))))->get<types::Type::GenericInstance>()).id;
+JaktInternal::Array<types::TypeId> const args = ((((*this).get_type((type_hint.value()))))->get<types::Type::GenericInstance>()).args;
 types::StructId const optional_struct_id = TRY((((*this).find_struct_in_prelude(String("Optional")))));
 if (((id).equals(optional_struct_id))){
 (type_hint_unwrapped = ((args)[static_cast<i64>(0LL)]));
@@ -5530,10 +5520,10 @@ types::TypeId const type_id = TRY((((*this).typecheck_typename(unchecked_type,sc
 (((*this).ignore_errors) = old_ignore_errors);
 types::CheckedUnaryOperator operator_is =  types::CheckedUnaryOperator { typename types::CheckedUnaryOperator::Is(type_id) } ;
 if (((unchecked_type)->index() == 0 /* Name */)){
-String const name = (unchecked_type->get<parser::ParsedType::Name>()).name;
+String const name = ((unchecked_type)->get<parser::ParsedType::Name>()).name;
 types::TypeId const expr_type_id = ((checked_expr)->type());
 if (((((*this).get_type(expr_type_id)))->index() == 24 /* Enum */)){
-types::EnumId const enum_id = (((*this).get_type(expr_type_id))->get<types::Type::Enum>()).value;
+types::EnumId const enum_id = ((((*this).get_type(expr_type_id)))->get<types::Type::Enum>()).value;
 types::CheckedEnum const enum_ = ((*this).get_enum(enum_id));
 bool exists = false;
 {
@@ -5636,8 +5626,8 @@ utility::Span const& span = __jakt_match_value.value;
 return JaktInternal::ExplicitValue(({ Optional<NonnullRefPtr<types::CheckedExpression>> __jakt_var_363; {
 JaktInternal::Optional<types::TypeId> type_hint_unwrapped = type_hint;
 if ((((type_hint).has_value()) && ((((*this).get_type((type_hint.value()))))->index() == 19 /* GenericInstance */))){
-types::StructId const id = (((*this).get_type((type_hint.value())))->get<types::Type::GenericInstance>()).id;
-JaktInternal::Array<types::TypeId> const args = (((*this).get_type((type_hint.value())))->get<types::Type::GenericInstance>()).args;
+types::StructId const id = ((((*this).get_type((type_hint.value()))))->get<types::Type::GenericInstance>()).id;
+JaktInternal::Array<types::TypeId> const args = ((((*this).get_type((type_hint.value()))))->get<types::Type::GenericInstance>()).args;
 types::StructId const optional_struct_id = TRY((((*this).find_struct_in_prelude(String("Optional")))));
 if (((id).equals(optional_struct_id))){
 (type_hint_unwrapped = ((args)[static_cast<i64>(0LL)]));
@@ -5850,8 +5840,8 @@ types::StructId const tuple_struct_id = TRY((((*this).find_struct_in_prelude(Str
 types::StructId const optional_struct_id = TRY((((*this).find_struct_in_prelude(String("Optional")))));
 types::TypeId expr_type_id = types::unknown_type_id();
 if (((((*this).get_type(((checked_expr)->type()))))->index() == 19 /* GenericInstance */)){
-types::StructId const id = (((*this).get_type(((checked_expr)->type())))->get<types::Type::GenericInstance>()).id;
-JaktInternal::Array<types::TypeId> const args = (((*this).get_type(((checked_expr)->type())))->get<types::Type::GenericInstance>()).args;
+types::StructId const id = ((((*this).get_type(((checked_expr)->type()))))->get<types::Type::GenericInstance>()).id;
+JaktInternal::Array<types::TypeId> const args = ((((*this).get_type(((checked_expr)->type()))))->get<types::Type::GenericInstance>()).args;
 if (((id).equals(tuple_struct_id))){
 if (is_optional){
 TRY((((*this).error(String("Optional chaining is not allowed on a non-optional tuple type"),span))));
@@ -5867,8 +5857,8 @@ else {
 else if ((is_optional && ((id).equals(optional_struct_id)))){
 types::TypeId const inner_type_id = ((args)[static_cast<i64>(0LL)]);
 if (((((*this).get_type(inner_type_id)))->index() == 19 /* GenericInstance */)){
-types::StructId const id = (((*this).get_type(inner_type_id))->get<types::Type::GenericInstance>()).id;
-JaktInternal::Array<types::TypeId> const args = (((*this).get_type(inner_type_id))->get<types::Type::GenericInstance>()).args;
+types::StructId const id = ((((*this).get_type(inner_type_id)))->get<types::Type::GenericInstance>()).id;
+JaktInternal::Array<types::TypeId> const args = ((((*this).get_type(inner_type_id)))->get<types::Type::GenericInstance>()).args;
 if (((id).equals(tuple_struct_id))){
 if ((index >= ((args).size()))){
 TRY((((*this).error(String("Optional-chained tuple index past the end of the tuple"),span))));
@@ -6078,7 +6068,7 @@ types::TypeId current_type_id = type_var_type_id;
 for (;;){
 NonnullRefPtr<types::Type> const type_var_type = ((*this).get_type(current_type_id));
 if (((type_var_type)->index() == 18 /* TypeVariable */)){
-String const type_name = (type_var_type->get<types::Type::TypeVariable>()).value;
+String const type_name = ((type_var_type)->get<types::Type::TypeVariable>()).value;
 JaktInternal::Optional<types::TypeId> const maybe_found_type_id = TRY((((*this).find_type_in_scope(scope_id,type_name))));
 if (((maybe_found_type_id).has_value())){
 types::TypeId const found_type_id = ((maybe_found_type_id).value());
@@ -6106,9 +6096,9 @@ bool typechecker::Typechecker::is_subclass_of(types::TypeId const ancestor_type_
 NonnullRefPtr<types::Type> const ancestor_type = ((*this).get_type(ancestor_type_id));
 NonnullRefPtr<types::Type> const child_type = ((*this).get_type(child_type_id));
 if (((ancestor_type)->index() == 23 /* Struct */)){
-types::StructId const ancestor_struct_id = (ancestor_type->get<types::Type::Struct>()).value;
+types::StructId const ancestor_struct_id = ((ancestor_type)->get<types::Type::Struct>()).value;
 if (((child_type)->index() == 23 /* Struct */)){
-types::StructId const child_struct_id = (child_type->get<types::Type::Struct>()).value;
+types::StructId const child_struct_id = ((child_type)->get<types::Type::Struct>()).value;
 types::CheckedStruct ancestor_struct = ((*this).get_struct(ancestor_struct_id));
 types::StructId current_struct_id = child_struct_id;
 for (;;){
@@ -6157,7 +6147,7 @@ ScopeGuard __jakt_var_376([&] {
 });
 NonnullRefPtr<types::CheckedStatement> const checked_statement = TRY((((*this).typecheck_statement(statement,scope_id,safety_mode,JaktInternal::OptionalNone()))));
 if (((checked_statement)->index() == 5 /* Block */)){
-types::CheckedBlock const block = (checked_statement->get<types::CheckedStatement::Block>()).block;
+types::CheckedBlock const block = ((checked_statement)->get<types::CheckedStatement::Block>()).block;
 if (((((block).yielded_type)).has_value())){
 TRY((((*this).error(String("‘yield’ inside ‘defer’ is meaningless"),span))));
 }
@@ -6367,8 +6357,8 @@ JaktInternal::Optional<utility::Span> inferred_type_span = JaktInternal::Optiona
 JaktInternal::Optional<types::TypeId> inner_hint = JaktInternal::OptionalNone();
 if (((type_hint).has_value())){
 if (((((*this).get_type((type_hint.value()))))->index() == 19 /* GenericInstance */)){
-types::StructId const id = (((*this).get_type((type_hint.value())))->get<types::Type::GenericInstance>()).id;
-JaktInternal::Array<types::TypeId> const args = (((*this).get_type((type_hint.value())))->get<types::Type::GenericInstance>()).args;
+types::StructId const id = ((((*this).get_type((type_hint.value()))))->get<types::Type::GenericInstance>()).id;
+JaktInternal::Array<types::TypeId> const args = ((((*this).get_type((type_hint.value()))))->get<types::Type::GenericInstance>()).args;
 if (((id).equals(array_struct_id))){
 (inner_hint = static_cast<JaktInternal::Optional<types::TypeId>>(((args)[static_cast<i64>(0LL)])));
 }
@@ -6478,8 +6468,8 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<types::Type::Gener
 JaktInternal::Array<types::TypeId> const& lhs_args = __jakt_match_value.args;
 {
 if (((rhs_type)->index() == 20 /* GenericEnumInstance */)){
-types::EnumId const rhs_enum_id = (rhs_type->get<types::Type::GenericEnumInstance>()).id;
-JaktInternal::Array<types::TypeId> const rhs_args = (rhs_type->get<types::Type::GenericEnumInstance>()).args;
+types::EnumId const rhs_enum_id = ((rhs_type)->get<types::Type::GenericEnumInstance>()).id;
+JaktInternal::Array<types::TypeId> const rhs_args = ((rhs_type)->get<types::Type::GenericEnumInstance>()).args;
 if (((lhs_enum_id).equals(rhs_enum_id))){
 types::CheckedEnum const lhs_enum = ((*this).get_enum(lhs_enum_id));
 if ((((lhs_args).size()) == ((rhs_args).size()))){
@@ -6514,9 +6504,9 @@ bool const& lhs_can_throw = __jakt_match_value.can_throw;
 types::TypeId const& lhs_return_type_id = __jakt_match_value.return_type_id;
 {
 if (((rhs_type)->index() == 29 /* Function */)){
-JaktInternal::Array<types::TypeId> const rhs_params = (rhs_type->get<types::Type::Function>()).params;
-bool const rhs_can_throw = (rhs_type->get<types::Type::Function>()).can_throw;
-types::TypeId const rhs_return_type_id = (rhs_type->get<types::Type::Function>()).return_type_id;
+JaktInternal::Array<types::TypeId> const rhs_params = ((rhs_type)->get<types::Type::Function>()).params;
+bool const rhs_can_throw = ((rhs_type)->get<types::Type::Function>()).can_throw;
+types::TypeId const rhs_return_type_id = ((rhs_type)->get<types::Type::Function>()).return_type_id;
 if ((!((lhs_can_throw == rhs_can_throw)))){
 String const lhs_throw = JAKT_RESOLVE_EXPLICIT_VALUE_OR_CONTROL_FLOW_RETURN_ONLY(([&]() -> JaktInternal::ExplicitValueOrControlFlow<String,ErrorOr<bool>>{
 auto __jakt_enum_value = (lhs_can_throw);
@@ -6589,8 +6579,8 @@ return (true);
 }
 }
 if (((rhs_type)->index() == 19 /* GenericInstance */)){
-types::StructId const id = (rhs_type->get<types::Type::GenericInstance>()).id;
-JaktInternal::Array<types::TypeId> const args = (rhs_type->get<types::Type::GenericInstance>()).args;
+types::StructId const id = ((rhs_type)->get<types::Type::GenericInstance>()).id;
+JaktInternal::Array<types::TypeId> const args = ((rhs_type)->get<types::Type::GenericInstance>()).args;
 types::StructId const rhs_struct_id = id;
 if (((lhs_struct_id).equals(rhs_struct_id))){
 JaktInternal::Array<types::TypeId> const rhs_args = args;
@@ -6774,7 +6764,7 @@ if (((lhs_rawptr_type_id).equals(rhs_type_id))){
 return (true);
 }
 if (((rhs_type)->index() == 25 /* RawPtr */)){
-types::TypeId const rhs_rawptr_type_id = (rhs_type->get<types::Type::RawPtr>()).value;
+types::TypeId const rhs_rawptr_type_id = ((rhs_type)->get<types::Type::RawPtr>()).value;
 if ((!(TRY((((*this).check_types_for_compat(lhs_rawptr_type_id,rhs_rawptr_type_id,generic_inferences,span))))))){
 return (false);
 }
@@ -6794,7 +6784,7 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<typename types::Ty
 types::TypeId const& lhs_inner_type_id = __jakt_match_value.value;
 {
 if (((rhs_type)->index() == 27 /* Reference */)){
-types::TypeId const rhs_inner_type_id = (rhs_type->get<types::Type::Reference>()).value;
+types::TypeId const rhs_inner_type_id = ((rhs_type)->get<types::Type::Reference>()).value;
 if ((!(TRY((((*this).check_types_for_compat(lhs_inner_type_id,rhs_inner_type_id,generic_inferences,span))))))){
 return (false);
 }
@@ -6929,7 +6919,7 @@ if (((!(is_fat_arrow)) && ((return_type)->index() == 13 /* Empty */))){
 (return_type_updated = true);
 }
 else if ((is_fat_arrow && ((!(((((checked_block).statements)).is_empty()))) && (((((((checked_block).statements)).last()).value()))->index() == 8 /* Return */)))){
-JaktInternal::Optional<NonnullRefPtr<types::CheckedExpression>> const val = ((((((checked_block).statements)).last()).value())->get<types::CheckedStatement::Return>()).val;
+JaktInternal::Optional<NonnullRefPtr<types::CheckedExpression>> const val = (((((((checked_block).statements)).last()).value()))->get<types::CheckedStatement::Return>()).val;
 if (((val).has_value())){
 (return_type_id = TRY((((*this).resolve_type_var((((val.value()))->type()),lambda_scope_id)))));
 (return_type_updated = true);
@@ -7171,7 +7161,7 @@ break;
 JaktInternal::Tuple<String,String> substitution = (_magic_value.value());
 {
 if (((((*this).get_type(TRY((types::TypeId::TypeId::from_string(((substitution).get<0>())))))))->index() == 18 /* TypeVariable */)){
-String const type_name = (((*this).get_type(TRY((types::TypeId::TypeId::from_string(((substitution).get<0>()))))))->get<types::Type::TypeVariable>()).value;
+String const type_name = ((((*this).get_type(TRY((types::TypeId::TypeId::from_string(((substitution).get<0>())))))))->get<types::Type::TypeVariable>()).value;
 TRY((((*this).add_type_to_scope(scope_id,type_name,TRY((types::TypeId::TypeId::from_string(((substitution).get<1>())))),span))));
 }
 }
@@ -7465,7 +7455,7 @@ parser::ParsedNameWithGenericParameters trait_name = (_magic_value.value());
 JaktInternal::Optional<types::TypeId> const maybe_type_id = TRY((((*this).find_type_in_scope(trait_name_scope_id,((trait_name).name)))));
 if (((maybe_type_id).has_value())){
 if (((((*this).get_type((maybe_type_id.value()))))->index() == 26 /* Trait */)){
-types::TraitId const trait_id = (((*this).get_type((maybe_type_id.value())))->get<types::Type::Trait>()).value;
+types::TraitId const trait_id = ((((*this).get_type((maybe_type_id.value()))))->get<types::Type::Trait>()).value;
 JaktInternal::Array<types::TypeId> generic_arguments = (TRY((Array<types::TypeId>::create_with({}))));
 {
 JaktInternal::ArrayIterator<NonnullRefPtr<parser::ParsedType>> _magic = ((((trait_name).generic_parameters)).iterator());
@@ -7570,7 +7560,7 @@ if (__jakt_enum_value == true) {
 types::TypeId const super_type_id = TRY((((*this).typecheck_typename((super_parsed_type.value()),scope_id,JaktInternal::OptionalNone()))));
 NonnullRefPtr<types::Type> const super_type = ((*this).get_type(super_type_id));
 if (((super_type)->index() == 23 /* Struct */)){
-types::StructId const struct_id = (super_type->get<types::Type::Struct>()).value;
+types::StructId const struct_id = ((super_type)->get<types::Type::Struct>()).value;
 (super_struct_id = struct_id);
 }
 else {
@@ -7598,7 +7588,7 @@ if (__jakt_enum_value == true) {
 types::TypeId const super_type_id = TRY((((*this).typecheck_typename((super_parsed_type.value()),scope_id,JaktInternal::OptionalNone()))));
 NonnullRefPtr<types::Type> const super_type = ((*this).get_type(super_type_id));
 if (((super_type)->index() == 23 /* Struct */)){
-types::StructId const struct_id = (super_type->get<types::Type::Struct>()).value;
+types::StructId const struct_id = ((super_type)->get<types::Type::Struct>()).value;
 (super_struct_id = struct_id);
 }
 else {
@@ -7712,7 +7702,7 @@ JaktInternal::Optional<NonnullRefPtr<types::CheckedExpression>> checked_default_
 if (((((param).default_argument)).has_value())){
 NonnullRefPtr<types::CheckedExpression> checked_default_value_expr = TRY((((*this).typecheck_expression((((param).default_argument).value()),scope_id, types::SafetyMode { typename types::SafetyMode::Safe() } ,param_type))));
 if (((checked_default_value_expr)->index() == 23 /* OptionalNone */)){
-utility::Span const expr_span = (checked_default_value_expr->get<types::CheckedExpression::OptionalNone>()).span;
+utility::Span const expr_span = ((checked_default_value_expr)->get<types::CheckedExpression::OptionalNone>()).span;
 (checked_default_value_expr = TRY((types::CheckedExpression::template create<typename types::CheckedExpression::OptionalNone>(expr_span,param_type))));
 }
 types::TypeId const default_value_type_id = ((checked_default_value_expr)->type());
@@ -8025,7 +8015,7 @@ types::TypeId const function_return_type_id = TRY((((*this).typecheck_typename((
 types::TypeId return_type_id = function_return_type_id;
 if ((((function_return_type_id).equals(types::unknown_type_id())) && (!(((((block).statements)).is_empty()))))){
 if (((((((block).statements))[static_cast<i64>(0LL)]))->index() == 8 /* Return */)){
-JaktInternal::Optional<NonnullRefPtr<types::CheckedExpression>> const val = (((((block).statements))[static_cast<i64>(0LL)])->get<types::CheckedStatement::Return>()).val;
+JaktInternal::Optional<NonnullRefPtr<types::CheckedExpression>> const val = ((((((block).statements))[static_cast<i64>(0LL)]))->get<types::CheckedStatement::Return>()).val;
 if (((val).has_value())){
 (return_type_id = (((val.value()))->type()));
 }
@@ -8293,7 +8283,7 @@ return JaktInternal::ExplicitValue((((maybe_var.value())).type_id));
 }()
 ));
 if (((((*this).get_type(inner_type)))->index() == 29 /* Function */)){
-types::FunctionId const pseudo_function_id = (((*this).get_type(inner_type))->get<types::Type::Function>()).pseudo_function_id;
+types::FunctionId const pseudo_function_id = ((((*this).get_type(inner_type)))->get<types::Type::Function>()).pseudo_function_id;
 return ((TRY((Array<types::FunctionId>::create_with({pseudo_function_id})))));
 }
 }
@@ -8372,8 +8362,8 @@ JaktInternal::Optional<utility::Span> value_type_span = JaktInternal::OptionalNo
 JaktInternal::Optional<types::TypeId> key_hint = JaktInternal::OptionalNone();
 JaktInternal::Optional<types::TypeId> value_hint = JaktInternal::OptionalNone();
 if ((((type_hint).has_value()) && ((((*this).get_type((type_hint.value()))))->index() == 19 /* GenericInstance */))){
-types::StructId const id = (((*this).get_type((type_hint.value())))->get<types::Type::GenericInstance>()).id;
-JaktInternal::Array<types::TypeId> const args = (((*this).get_type((type_hint.value())))->get<types::Type::GenericInstance>()).args;
+types::StructId const id = ((((*this).get_type((type_hint.value()))))->get<types::Type::GenericInstance>()).id;
+JaktInternal::Array<types::TypeId> const args = ((((*this).get_type((type_hint.value()))))->get<types::Type::GenericInstance>()).args;
 if (((id).equals(dictionary_struct_id))){
 (key_hint = ((args)[static_cast<i64>(0LL)]));
 (value_hint = ((args)[static_cast<i64>(1LL)]));
@@ -8672,8 +8662,8 @@ NonnullRefPtr<types::CheckedStatement> const checked_tuple_var_decl = TRY((((*th
 types::TypeId expr_type_id = types::unknown_type_id();
 types::VarId tuple_var_id = types::VarId(types::ModuleId(static_cast<size_t>(0ULL)),static_cast<size_t>(0ULL));
 if (((checked_tuple_var_decl)->index() == 3 /* VarDecl */)){
-types::VarId const var_id = (checked_tuple_var_decl->get<types::CheckedStatement::VarDecl>()).var_id;
-NonnullRefPtr<types::CheckedExpression> const init = (checked_tuple_var_decl->get<types::CheckedStatement::VarDecl>()).init;
+types::VarId const var_id = ((checked_tuple_var_decl)->get<types::CheckedStatement::VarDecl>()).var_id;
+NonnullRefPtr<types::CheckedExpression> const init = ((checked_tuple_var_decl)->get<types::CheckedStatement::VarDecl>()).init;
 (expr_type_id = ((init)->type()));
 (tuple_var_id = var_id);
 }
@@ -8684,7 +8674,7 @@ TRY((((*this).error(String("Destructuting assignment should be a variable declar
 JaktInternal::Array<types::TypeId> inner_types = (TRY((Array<types::TypeId>::create_with({}))));
 NonnullRefPtr<types::Type> const tuple_type = ((*this).get_type(expr_type_id));
 if (((tuple_type)->index() == 19 /* GenericInstance */)){
-JaktInternal::Array<types::TypeId> const args = (tuple_type->get<types::Type::GenericInstance>()).args;
+JaktInternal::Array<types::TypeId> const args = ((tuple_type)->get<types::Type::GenericInstance>()).args;
 (inner_types = args);
 }
 else {
@@ -8795,8 +8785,8 @@ parser::UnaryOperator const& op = __jakt_match_value.op;
 {
 if (((((op).index() == 7 /* Reference */) || ((op).index() == 8 /* MutableReference */)) || ((op).index() == 5 /* Dereference */))){
 if (((expr)->index() == 9 /* Var */)){
-String const name = (expr->get<parser::ParsedExpression::Var>()).name;
-utility::Span const span = (expr->get<parser::ParsedExpression::Var>()).span;
+String const name = ((expr)->get<parser::ParsedExpression::Var>()).name;
+utility::Span const span = ((expr)->get<parser::ParsedExpression::Var>()).span;
 if ((name == ((((param).variable)).name))){
 return (true);
 }
@@ -9348,7 +9338,7 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<parser::ParsedType
 utility::Span const& span = __jakt_match_value.span;
 {
 if (((((*this).get_type(expr_type_id)))->index() == 24 /* Enum */)){
-types::EnumId const enum_id = (((*this).get_type(expr_type_id))->get<types::Type::Enum>()).value;
+types::EnumId const enum_id = ((((*this).get_type(expr_type_id)))->get<types::Type::Enum>()).value;
 types::CheckedEnum const enum_ = ((*this).get_enum(enum_id));
 JaktInternal::Optional<types::CheckedEnumVariant> const variant = TRY((((*this).get_enum_variant(enum_,variant_name))));
 if (((variant).has_value())){
@@ -9374,7 +9364,7 @@ auto&& __jakt_match_value = __jakt_match_variant.template get<parser::ParsedType
 utility::Span const& span = __jakt_match_value.span;
 {
 if (((((*this).get_type(expr_type_id)))->index() == 24 /* Enum */)){
-types::EnumId const enum_id = (((*this).get_type(expr_type_id))->get<types::Type::Enum>()).value;
+types::EnumId const enum_id = ((((*this).get_type(expr_type_id)))->get<types::Type::Enum>()).value;
 types::CheckedEnum const enum_ = ((*this).get_enum(enum_id));
 JaktInternal::Optional<types::CheckedEnumVariant> const variant = TRY((((*this).get_enum_variant(enum_,variant_name))));
 if (((variant).has_value())){
@@ -9416,7 +9406,7 @@ return (((((*this).program))->get_variable(id)));
 bool typechecker::Typechecker::is_class(types::TypeId const type_id) const {
 {
 if (((((*this).get_type(type_id)))->index() == 23 /* Struct */)){
-types::StructId const struct_id = (((*this).get_type(type_id))->get<types::Type::Struct>()).value;
+types::StructId const struct_id = ((((*this).get_type(type_id)))->get<types::Type::Struct>()).value;
 return (((((((*this).get_struct(struct_id))).record_type)).index() == 1 /* Class */));
 }
 else {
@@ -9432,7 +9422,7 @@ if (((((block).statements)).is_empty())){
 return (types::void_type_id());
 }
 if ((((((((block).statements)).last()).value()))->index() == 8 /* Return */)){
-JaktInternal::Optional<NonnullRefPtr<types::CheckedExpression>> const val = ((((((block).statements)).last()).value())->get<types::CheckedStatement::Return>()).val;
+JaktInternal::Optional<NonnullRefPtr<types::CheckedExpression>> const val = (((((((block).statements)).last()).value()))->get<types::CheckedStatement::Return>()).val;
 if (((val).has_value())){
 return ((((val.value()))->type()));
 }
@@ -9844,7 +9834,7 @@ types::TypeId return_type_id = types::builtin( types::BuiltinType { typename typ
 if (((function_return_type_id).equals(types::unknown_type_id()))){
 if ((!(((((block).statements)).is_empty())))){
 if ((((((((block).statements)).last()).value()))->index() == 8 /* Return */)){
-JaktInternal::Optional<NonnullRefPtr<types::CheckedExpression>> const val = ((((((block).statements)).last()).value())->get<types::CheckedStatement::Return>()).val;
+JaktInternal::Optional<NonnullRefPtr<types::CheckedExpression>> const val = (((((((block).statements)).last()).value()))->get<types::CheckedStatement::Return>()).val;
 if (((val).has_value())){
 (return_type_id = TRY((((*this).resolve_type_var((((val.value()))->type()),method_scope_id)))));
 }
@@ -10267,7 +10257,7 @@ JaktInternal::Optional<NonnullRefPtr<types::CheckedExpression>> checked_default_
 if (((((parameter).default_argument)).has_value())){
 NonnullRefPtr<types::CheckedExpression> checked_default_value_expr = TRY((((*this).typecheck_expression((((parameter).default_argument).value()),scope_id, types::SafetyMode { typename types::SafetyMode::Safe() } ,type_id))));
 if (((checked_default_value_expr)->index() == 23 /* OptionalNone */)){
-utility::Span const expr_span = (checked_default_value_expr->get<types::CheckedExpression::OptionalNone>()).span;
+utility::Span const expr_span = ((checked_default_value_expr)->get<types::CheckedExpression::OptionalNone>()).span;
 (checked_default_value_expr = TRY((types::CheckedExpression::template create<typename types::CheckedExpression::OptionalNone>(expr_span,type_id))));
 }
 types::TypeId const default_value_type_id = ((checked_default_value_expr)->type());
@@ -10289,7 +10279,7 @@ return (checked_parameter);
 ErrorOr<JaktInternal::Optional<JaktInternal::Array<types::CheckedEnumVariantBinding>>> typechecker::Typechecker::typecheck_enum_variant_bindings(types::CheckedEnumVariant const variant,JaktInternal::Array<parser::EnumVariantPatternArgument> const bindings,utility::Span const span) {
 {
 if (((variant).index() == 1 /* Typed */)){
-types::TypeId const type_id = (variant.get<types::CheckedEnumVariant::Typed>()).type_id;
+types::TypeId const type_id = ((variant).get<types::CheckedEnumVariant::Typed>()).type_id;
 if ((((bindings).size()) != static_cast<size_t>(1ULL))){
 TRY((((*this).error(TRY((String::formatted(String("Enum variant ‘{}’ must have exactly one argument"),((variant).name())))),span))));
 return (JaktInternal::OptionalNone());
@@ -10297,7 +10287,7 @@ return (JaktInternal::OptionalNone());
 return ((TRY((Array<types::CheckedEnumVariantBinding>::create_with({types::CheckedEnumVariantBinding(JaktInternal::OptionalNone(),((((bindings)[static_cast<i64>(0LL)])).binding),type_id,span)})))));
 }
 if (((variant).index() == 3 /* StructLike */)){
-JaktInternal::Array<types::VarId> const fields = (variant.get<types::CheckedEnumVariant::StructLike>()).fields;
+JaktInternal::Array<types::VarId> const fields = ((variant).get<types::CheckedEnumVariant::StructLike>()).fields;
 JaktInternal::Array<types::CheckedVariable> checked_vars = (TRY((Array<types::CheckedVariable>::create_with({}))));
 JaktInternal::Array<types::CheckedEnumVariantBinding> checked_enum_variant_bindings = (TRY((Array<types::CheckedEnumVariantBinding>::create_with({}))));
 {
@@ -10643,8 +10633,8 @@ if ((((type_hint).has_value()) && ((!((((type_hint.value())).equals(types::unkno
 (final_result_type = type_hint);
 }
 if (((type_to_match_on)->index() == 20 /* GenericEnumInstance */)){
-types::EnumId const id = (type_to_match_on->get<types::Type::GenericEnumInstance>()).id;
-JaktInternal::Array<types::TypeId> const args = (type_to_match_on->get<types::Type::GenericEnumInstance>()).args;
+types::EnumId const id = ((type_to_match_on)->get<types::Type::GenericEnumInstance>()).id;
+JaktInternal::Array<types::TypeId> const args = ((type_to_match_on)->get<types::Type::GenericEnumInstance>()).args;
 types::CheckedEnum const enum_ = ((*this).get_enum(id));
 {
 JaktInternal::Range<size_t> _magic = (JaktInternal::Range<size_t>{static_cast<size_t>(static_cast<size_t>(0ULL)),static_cast<size_t>(((((enum_).generic_parameters)).size()))});
@@ -11192,8 +11182,8 @@ if ((!(((((checked_expression)->to_number_constant(((*this).program)))).has_valu
 }
 types::TypeId expression_type = ((checked_expression)->type());
 if (((checked_expression)->index() == 8 /* Range */)){
-JaktInternal::Optional<NonnullRefPtr<types::CheckedExpression>> const from = (checked_expression->get<types::CheckedExpression::Range>()).from;
-JaktInternal::Optional<NonnullRefPtr<types::CheckedExpression>> const to = (checked_expression->get<types::CheckedExpression::Range>()).to;
+JaktInternal::Optional<NonnullRefPtr<types::CheckedExpression>> const from = ((checked_expression)->get<types::CheckedExpression::Range>()).from;
+JaktInternal::Optional<NonnullRefPtr<types::CheckedExpression>> const to = ((checked_expression)->get<types::CheckedExpression::Range>()).to;
 if ((((from).has_value()) || ((to).has_value()))){
 if (((from).has_value())){
 (expression_type = (((from.value()))->type()));
@@ -11298,11 +11288,11 @@ TRY((((*this).error(param_type_error,((parsed_function).name_span)))));
 }
 if ((!(((((parsed_function).params)).is_empty())))){
 if (((((((((((parsed_function).params))[static_cast<i64>(0LL)])).variable)).parsed_type))->index() == 3 /* JaktArray */)){
-NonnullRefPtr<parser::ParsedType> const inner = (((((((((parsed_function).params))[static_cast<i64>(0LL)])).variable)).parsed_type)->get<parser::ParsedType::JaktArray>()).inner;
-utility::Span const span = (((((((((parsed_function).params))[static_cast<i64>(0LL)])).variable)).parsed_type)->get<parser::ParsedType::JaktArray>()).span;
+NonnullRefPtr<parser::ParsedType> const inner = ((((((((((parsed_function).params))[static_cast<i64>(0LL)])).variable)).parsed_type))->get<parser::ParsedType::JaktArray>()).inner;
+utility::Span const span = ((((((((((parsed_function).params))[static_cast<i64>(0LL)])).variable)).parsed_type))->get<parser::ParsedType::JaktArray>()).span;
 if (((inner)->index() == 0 /* Name */)){
-String const name = (inner->get<parser::ParsedType::Name>()).name;
-utility::Span const span = (inner->get<parser::ParsedType::Name>()).span;
+String const name = ((inner)->get<parser::ParsedType::Name>()).name;
+utility::Span const span = ((inner)->get<parser::ParsedType::Name>()).span;
 if ((name != String("String"))){
 TRY((((*this).error(param_type_error,span))));
 }
@@ -11557,7 +11547,7 @@ parser::ParsedNameWithGenericParameters name = (_magic_value.value());
 JaktInternal::Optional<types::TypeId> const type_id = TRY((((*this).find_type_in_scope(scope_id,((name).name)))));
 if (((type_id).has_value())){
 if (((((*this).get_type((type_id.value()))))->index() == 26 /* Trait */)){
-types::TraitId const trait_id = (((*this).get_type((type_id.value())))->get<types::Type::Trait>()).value;
+types::TraitId const trait_id = ((((*this).get_type((type_id.value()))))->get<types::Type::Trait>()).value;
 TRY((((((trait_requirements))).push(trait_id))));
 }
 else {

@@ -1476,7 +1476,7 @@ if ((!(((known_type_id).equals(types::unknown_type_id()))))){
 (result_type = static_cast<JaktInternal::Optional<types::TypeId>>(known_type_id));
 }
 if (((((program)->get_type(type_id)))->index() == 23 /* Struct */)){
-types::StructId const struct_id = (((program)->get_type(type_id))->get<types::Type::Struct>()).value;
+types::StructId const struct_id = ((((program)->get_type(type_id)))->get<types::Type::Struct>()).value;
 {
 JaktInternal::ArrayIterator<types::CheckedField> _magic = ((((((program)->get_struct(struct_id))).fields)).iterator());
 for (;;){
@@ -1692,7 +1692,7 @@ break;
 types::CheckedMatchCase other_case = (_magic_value.value());
 {
 if (((other_case).index() == 0 /* EnumVariant */)){
-String const name = (other_case.get<types::CheckedMatchCase::EnumVariant>()).name;
+String const name = ((other_case).get<types::CheckedMatchCase::EnumVariant>()).name;
 ((remaining_cases).remove(name));
 }
 }

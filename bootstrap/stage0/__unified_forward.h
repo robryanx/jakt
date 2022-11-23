@@ -9,8 +9,6 @@ namespace jakt__prelude__iteration {
 }
 namespace jakt__prelude__prelude {
 }
-namespace jakt__libc__io {
-}
 namespace jakt__arguments {
 struct ArgsParser;
 ErrorOr<String> escape_for_quotes(String const s);
@@ -21,14 +19,15 @@ struct Span;
 struct FileId;
 bool is_ascii_binary(u8 const c);
 
-String join(JaktInternal::Array<String> const strings, String const separator);
+bool is_ascii_alpha(u8 const c);
 
 template <typename T>
 ErrorOr<JaktInternal::Array<T>> add_arrays(JaktInternal::Array<T> const a, JaktInternal::Array<T> const b);
 
 bool is_whitespace(u8 const byte);
 
-bool is_ascii_alpha(u8 const c);
+template <typename T>
+T* null();
 
 ErrorOr<JaktInternal::Array<String>> prepend_to_each(JaktInternal::Array<String> const strings, String const prefix);
 
@@ -42,8 +41,9 @@ ErrorOr<String> interpret_escapes(String const s);
 
 ErrorOr<JaktInternal::Array<String>> append_to_each(JaktInternal::Array<String> const strings, String const suffix);
 
-template <typename T>
-T* null();
+ErrorOr<void> write_to_file(String const data, String const output_filename);
+
+String join(JaktInternal::Array<String> const strings, String const separator);
 
 bool is_ascii_octdigit(u8 const c);
 
@@ -934,6 +934,15 @@ String serialize_unary_operation(types::CheckedUnaryOperator const op, String co
 ErrorOr<String> serialize_ast_node(NonnullRefPtr<types::CheckedExpression> const node);
 
 }
+namespace unknown_fs {
+ErrorOr<void> make_directory(String const path);
+
+ErrorOr<String> current_directory();
+
+}
+namespace project {
+struct Project;
+}
 namespace ide {
 struct JaktSymbol;
 namespace Mutability_Details {
@@ -1037,21 +1046,13 @@ namespace build {
 struct Builder;
 struct ParallelExecutionPool;
 }
-namespace unknown_fs {
-ErrorOr<void> make_directory(String const path);
-
-}
 namespace unknown_compiler {
 ErrorOr<JaktInternal::Array<String>> run_compiler(String const cxx_compiler_path, String const cpp_filename, String const output_filename, String const runtime_path, JaktInternal::Array<String> const extra_include_paths, JaktInternal::Array<String> const extra_lib_paths, JaktInternal::Array<String> const extra_link_libs, bool const optimize, JaktInternal::Array<String> const extra_compiler_flags);
 
 }
 struct FormatRange;
-ErrorOr<void> write_to_file(String const data, String const output_filename);
-
 
 String help();
-
-ErrorOr<JaktInternal::Optional<FormatRange>> parse_format_range(String const range, size_t const input_file_length);
 
 ErrorOr<String> indent(size_t const level);
 
@@ -1060,5 +1061,7 @@ ErrorOr<T> value_or_throw(JaktInternal::Optional<T> const maybe);
 
 String usage();
 
+
+ErrorOr<JaktInternal::Optional<FormatRange>> parse_format_range(String const range, size_t const input_file_length);
 
 } // namespace Jakt

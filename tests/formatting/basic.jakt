@@ -1,0 +1,6 @@
+/// Expect:
+/// - output: basic_formatted.jakt
+
+function main() {
+        let test = 1
+}

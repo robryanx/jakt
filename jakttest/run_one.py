@@ -40,6 +40,10 @@ def main():
         help="The target triple of the host platform",
     )
     parser.add_argument(
+        "--test-type",
+        help="The type of test (code/ formatting)",
+    )
+    parser.add_argument(
         "--cpp-include",
         help="Additional include path",
     )
@@ -52,6 +56,7 @@ def main():
     jakt_binary = Path(args.jakt_binary).resolve()
     jakt_lib_dir = Path(args.jakt_lib_dir).resolve()
     target_triple = args.target_triple
+    test_type = args.test_type
     cpp_include = ""
     if args.cpp_include and not args.cpp_include == "none":
         cpp_include = f"-I{Path(test_file.parent, args.cpp_include)}"
@@ -63,64 +68,84 @@ def main():
     runtime_path_for_stdlib = str(Path("./runtime").resolve())
 
     # Generate C++ code, exit with status == 3 on failure
-    with open(temp_dir / "compile_jakt.err", "w") as stderr:
-        try:
-            subprocess.run(
-                [jakt_binary, test_file, "-B", temp_dir, "-S", "-R", runtime_path_for_stdlib],
-                check=True,
-                stderr=stderr,
-                cwd=test_file.parent,
-            )
-        except subprocess.CalledProcessError as e:
-            sys.exit(3)
 
-    # Compile C++ code, exit with status == 2 on failure
-    with open(temp_dir / "compile_cpp.err", "w") as stderr:
-        try:
-            subprocess.run(
-                [
-                    "clang++",
-                    f"--target={target_triple}",
-                    "-fdiagnostics-color=always",
-                    "-std=c++20",
-                    "-Wno-unknown-warning-option",
-                    "-Wno-trigraphs",
-                    "-Wno-parentheses-equality",
-                    "-Wno-unqualified-std-cast-call",
-                    "-Wno-user-defined-literals",
-                    "-Wno-deprecated-declarations",
-                    "-Iruntime",
-                    cpp_include,
-                    "-DJAKT_CONTINUE_ON_PANIC",
-                    "-o",
-                    temp_dir / "output",
-                    *WINDOWS_SPECIFIC_COMPILER_ARGUMENTS,
-                    *list(temp_dir.glob("*.cpp")),
-                    jakt_lib_dir / MAIN_LIBRARY_NAME,
-                    jakt_lib_dir / RUNTIME_LIBRARY_NAME,
-                ],
-                check=True,
-                stderr=stderr,
-            )
-        except subprocess.CalledProcessError as e:
-            sys.exit(2)
+    jakt_args = [jakt_binary, test_file, "-B", temp_dir, "-S", "-R", runtime_path_for_stdlib]
+    if test_type == "formatting":
+        jakt_args.append("-f")
 
-    # Run the executable inside the parent directory of the test file,
-    # dump stderr into runtest.err and stdout into runtest.out in temp_dir
-    # exit with status == 1 on failure
-    with open(temp_dir / "runtest.out", "w") as stdout, open(
-        temp_dir / "runtest.err", "w"
-    ) as stderr:
-        try:
-            subprocess.run(
-                [temp_dir / "output"],
-                stdout=stdout,
-                stderr=stderr,
-                check=True,
-                cwd=test_file.parent,
-            )
-        except subprocess.CalledProcessError:
-            sys.exit(1)
+    if test_type == "formatting":
+        with open(temp_dir / "runtest.out", "w") as stdout:
+            try:
+                subprocess.run(
+                    jakt_args,
+                    check=True,
+                    stdout=stdout,
+                    cwd=test_file.parent,
+                )
+            except subprocess.CalledProcessError as e:
+                sys.exit(3)
+    else:
+        with open(temp_dir / "compile_jakt.err", "w") as stderr:
+            try:
+                subprocess.run(
+                    jakt_args,
+                    check=True,
+                    stderr=stderr,
+                    cwd=test_file.parent,
+                )
+            except subprocess.CalledProcessError as e:
+                sys.exit(3)
+
+    
+
+    if test_type == "code":
+        # Compile C++ code, exit with status == 2 on failure
+        with open(temp_dir / "compile_cpp.err", "w") as stderr:
+            try:
+                subprocess.run(
+                    [
+                        "clang++",
+                        f"--target={target_triple}",
+                        "-fdiagnostics-color=always",
+                        "-std=c++20",
+                        "-Wno-unknown-warning-option",
+                        "-Wno-trigraphs",
+                        "-Wno-parentheses-equality",
+                        "-Wno-unqualified-std-cast-call",
+                        "-Wno-user-defined-literals",
+                        "-Wno-deprecated-declarations",
+                        "-Iruntime",
+                        cpp_include,
+                        "-DJAKT_CONTINUE_ON_PANIC",
+                        "-o",
+                        temp_dir / "output",
+                        *WINDOWS_SPECIFIC_COMPILER_ARGUMENTS,
+                        *list(temp_dir.glob("*.cpp")),
+                        jakt_lib_dir / MAIN_LIBRARY_NAME,
+                        jakt_lib_dir / RUNTIME_LIBRARY_NAME,
+                    ],
+                    check=True,
+                    stderr=stderr,
+                )
+            except subprocess.CalledProcessError as e:
+                sys.exit(2)
+
+        # Run the executable inside the parent directory of the test file,
+        # dump stderr into runtest.err and stdout into runtest.out in temp_dir
+        # exit with status == 1 on failure
+        with open(temp_dir / "runtest.out", "w") as stdout, open(
+            temp_dir / "runtest.err", "w"
+        ) as stderr:
+            try:
+                subprocess.run(
+                    [temp_dir / "output"],
+                    stdout=stdout,
+                    stderr=stderr,
+                    check=True,
+                    cwd=test_file.parent,
+                )
+            except subprocess.CalledProcessError:
+                sys.exit(1)
 
 
 if __name__ == "__main__":

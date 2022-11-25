@@ -1,0 +1,5 @@
+/// Expect: Result
+
+function main() {
+    let test = 1
+}

@@ -48,8 +48,6 @@ import extern "fs.h" {
         // Calls `stat` on a file. Silences `ENOENT` error by setting
         // StatResults.exists to false.
         extern function stat_silencing_enoent(path: String) throws -> StatResults?
-
-
     }
 }
 
@@ -149,14 +147,13 @@ function print_usage()  {
     eprintln("\t\t\tWill try to use $TMP_DIR or /tmp in UNIX-based systems, or %TEMP% in Windows")
 }
 
-function compare_test(bytes: [u8], expected: String) throws -> bool {
-    // first, build up the content to compare to
-    mut builder = StringBuilder::create()
-    for b in bytes {
-        builder.append(b)
+function compare_test(type: TestType, mut bytes: [u8], expected: String) throws -> bool {
+    // for a formatting test strip the directives at the top of the file from the output
+    if type is Formatting {
+        bytes = Parser::get_result(input: bytes)
     }
 
-    mut builder_output = builder.to_string()
+    mut builder_output = bytes_to_string(bytes)
     // Strip windows newlines
     builder_output = builder_output.replace(replace: "\r", with: "")
 
@@ -399,7 +396,13 @@ struct ExpectedResult {
     output: String
 }
 
+enum TestType {
+    Code
+    Formatting
+}
+
 struct Test {
+    type: TestType
     result: ExpectedResult
     file_name: String
     directory_index: usize
@@ -465,7 +468,7 @@ struct TestScheduler {
         let expected = test.result.output
 
         let passed_test = match test.result.kind {
-            Okay => compare_test(bytes: result_output, expected)
+            Okay => compare_test(type: test.type, bytes: result_output, expected)
             RuntimeError | CompileError => compare_error(bytes: error_output, expected)
         }
 
@@ -635,6 +638,8 @@ struct TestScheduler {
             String::format("{}/lib", build_dir)
             "--target-triple"
             ___jakt_get_target_triple_string()
+            "--test-type"
+            "code"
             "--cpp-include"
             "None" // A sentinel value is passed here because Windows shell does not allow empty arguments
             ""
@@ -645,9 +650,19 @@ struct TestScheduler {
             mut test = tests.pop()!
             test.directory_index = dir_index
             let directory = scheduler.directories[test.directory_index]
+
+            if test.type is Formatting {
+                command_buffer[command_buffer.size() - 5] = "formatting"
+            } else {
+                command_buffer[command_buffer.size() - 5] = "code"
+            }
+
             if test.cppincludes.length() > 0 {
                 command_buffer[command_buffer.size() - 3] = test.cppincludes
+            } else {
+                command_buffer[command_buffer.size() - 3] = "None"
             }
+
             command_buffer[command_buffer.size() - 2] = directory
             command_buffer[command_buffer.size() - 1] = test.file_name
 
@@ -715,27 +730,42 @@ function main(args: [String]) {
     for file_name in parsed_options.files {
         let current_file = Path::from_string(file_name)
         let current_directory = current_file.parent()
+
         mut file = File::open_for_reading(file_name)
         let contents = file.read_all()
         let result = Parser::parse(input: contents)
         match result {
             SuccessTest(output_filename, output, cppincludes) => {
-                tests.push(Test(result: ExpectedResult(kind: ResultKind::Okay, output: get_test_output(current_directory, output_filename, output))
-                                file_name
-                                directory_index: 0
-                                cppincludes))       
+                mut test_type = TestType::Code
+                if(current_directory.to_string() == "tests/formatting") {
+                    test_type = TestType::Formatting
+                }
+
+                tests.push(Test(
+                    type: test_type
+                    result: ExpectedResult(kind: ResultKind::Okay, output: get_test_output(current_directory, output_filename, output))
+                    file_name
+                    directory_index: 0
+                    cppincludes
+                ))
             }
             CompileErrorTest(output_filename, output, cppincludes) => {
-                tests.push(Test(result: ExpectedResult(kind: ResultKind::CompileError, output: get_test_output(current_directory, output_filename, output))
-                                file_name
-                                directory_index: 0
-                                cppincludes))
+                tests.push(Test(
+                    type: TestType::Code
+                    result: ExpectedResult(kind: ResultKind::CompileError, output: get_test_output(current_directory, output_filename, output))
+                    file_name
+                    directory_index: 0
+                    cppincludes
+                ))
             }
             RuntimeErrorTest(output_filename, output, cppincludes) => {
-                tests.push(Test(result: ExpectedResult(kind: ResultKind::RuntimeError, output: get_test_output(current_directory, output_filename, output))
-                                file_name
-                                directory_index: 0
-                                cppincludes))
+                tests.push(Test(
+                    type: TestType::Code
+                    result: ExpectedResult(kind: ResultKind::RuntimeError, output: get_test_output(current_directory, output_filename, output))
+                    file_name
+                    directory_index: 0
+                    cppincludes
+                ))
             }
             SkipTest => {
                 eprintln("[ \x1b[33;1mSKIP\x1b[m ] {}", file_name)

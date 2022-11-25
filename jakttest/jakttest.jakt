@@ -9,6 +9,7 @@ import error { JaktError, print_error }
 import parser { Parser }
 import lexer { Lexer }
 import utility { panic }
+import jakt::path { Path }
 
 // needed for sigaction() stuff
 // FIXME: See #1015, needs to be OS-specific
@@ -672,6 +673,22 @@ struct TestScheduler {
     }
 }
 
+function get_test_output(mut current_directory: Path, output_filename: String?, output: String?) throws -> String {
+    mut return_output = ""
+
+    if output_filename.has_value() {
+        mut file = File::open_for_reading(current_directory.join(output_filename!).to_string())
+
+        let result = Parser::get_result(input: file.read_all())
+
+        return_output = bytes_to_string(result)
+    } else if output.has_value() {
+        return_output = output!
+    }
+
+    return return_output
+}
+
 function main(args: [String]) {
     let parsed_options = Options::from_args(args)
 
@@ -696,24 +713,26 @@ function main(args: [String]) {
 
     // parse all files to collect the actual work we have to do
     for file_name in parsed_options.files {
+        let current_file = Path::from_string(file_name)
+        let current_directory = current_file.parent()
         mut file = File::open_for_reading(file_name)
         let contents = file.read_all()
         let result = Parser::parse(input: contents)
         match result {
-            SuccessTest(output, cppincludes) => {
-                tests.push(Test(result: ExpectedResult(kind: ResultKind::Okay, output)
+            SuccessTest(output_filename, output, cppincludes) => {
+                tests.push(Test(result: ExpectedResult(kind: ResultKind::Okay, output: get_test_output(current_directory, output_filename, output))
+                                file_name
+                                directory_index: 0
+                                cppincludes))       
+            }
+            CompileErrorTest(output_filename, output, cppincludes) => {
+                tests.push(Test(result: ExpectedResult(kind: ResultKind::CompileError, output: get_test_output(current_directory, output_filename, output))
                                 file_name
                                 directory_index: 0
                                 cppincludes))
             }
-            CompileErrorTest(output, cppincludes) => {
-                tests.push(Test(result: ExpectedResult(kind: ResultKind::CompileError, output)
-                                file_name
-                                directory_index: 0
-                                cppincludes))
-            }
-            RuntimeErrorTest(output, cppincludes) => {
-                tests.push(Test(result: ExpectedResult(kind: ResultKind::RuntimeError, output)
+            RuntimeErrorTest(output_filename, output, cppincludes) => {
+                tests.push(Test(result: ExpectedResult(kind: ResultKind::RuntimeError, output: get_test_output(current_directory, output_filename, output))
                                 file_name
                                 directory_index: 0
                                 cppincludes))
@@ -726,6 +745,7 @@ function main(args: [String]) {
                 eprintln("[ \x1b[31;1mFAIL\x1b[m ] {}", file_name)
                 bad_formatted_tests.push(file_name)
             }
+            ResultFile => {}
         }
     }
 

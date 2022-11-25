@@ -181,16 +181,20 @@ endif()
 option(JAKT_BUILD_TESTING "Whether to build tests or not, default on" ON)
 
 if (JAKT_BUILD_TESTING)
+  # FIXME: STDLIB target needed
+  set(JAKTTEST_STDLIB_SOURCES
+    jakt__path.cpp
+  )
+
   add_jakt_executable(jakttest
-    MAIN_SOURCE
-      jakttest/jakttest.jakt
+    MAIN_SOURCE jakttest/jakttest.jakt
     MODULE_SOURCES
       jakttest/error.jakt
       jakttest/lexer.jakt
       jakttest/parser.jakt
       jakttest/utility.jakt
-    INCLUDES
-      "${CMAKE_CURRENT_SOURCE_DIR}/jakttest"
+    STDLIB_SOURCES ${JAKTTEST_STDLIB_SOURCES}
+    INCLUDES "${CMAKE_CURRENT_SOURCE_DIR}/jakttest"
   )
   add_jakt_compiler_flags(jakttest)
   target_sources(jakttest PRIVATE

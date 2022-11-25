@@ -6,10 +6,11 @@ import error { JaktError }
 import utility { panic, todo, Span }
 
 enum ParsedTest {
-    SuccessTest(output: String, cppincludes: String)
-    CompileErrorTest(output: String, cppincludes: String)
-    RuntimeErrorTest(output: String, cppincludes: String)
+    SuccessTest(output_filename: String?, output: String?, cppincludes: String)
+    CompileErrorTest(output_filename: String?, output: String?, cppincludes: String)
+    RuntimeErrorTest(output_filename: String?, output: String?, cppincludes: String)
     SkipTest
+    ResultFile
     NoExpectOrSkip
 }
 
@@ -40,17 +41,35 @@ struct Parser {
         return true
     }
 
-
     function skip_whitespace(mut this) {
         while not .is_eof() and is_whitespace(.current()) {
             .index++
         }
     }
 
+    function lex_string(mut this) -> Span? {
+        if .is_eof() {
+            return None
+        }
+        let start = .index
+        while not .is_eof() and .current() != b'\n' {
+            .index++
+            if .current() == b'\\' and not .is_eof() {
+                .index++
+            }
+        }
+
+        if start == .index {
+            return None
+        }
+
+        .index++
+        return Span(start, end: .index - 1)
+    }
+
     function lex_quoted_string(mut this) -> Span? {
-        let nothing: Span? = None
         if .is_eof() or .current() != b'"' {
-            return nothing
+            return None
         }
         .index++
         let start = .index
@@ -63,10 +82,20 @@ struct Parser {
         }
 
         if .current() != b'"' {
-            return nothing
+            return None
         }
         .index++
         return Span(start, end: .index - 1)
+    }
+
+    function get_result(mut this) throws -> [u8] {
+        .parse_test()
+
+        while .current() == b'\n' {
+            .index++
+        }
+
+        return .input[.index..].to_array()
     }
 
     function parse_test(mut this) throws -> ParsedTest {
@@ -85,9 +114,10 @@ struct Parser {
             return ParsedTest::SkipTest
         }
 
-        if .lex_literal("selfhost-only") {
-            .skip_whitespace()
+        if .lex_literal("Result") {
+            return ParsedTest::ResultFile
         }
+
         if .is_eof() or .current() != b'\n' {
             return ParsedTest::NoExpectOrSkip
         }
@@ -100,7 +130,8 @@ struct Parser {
         mut runtime_error = false
         mut compile_error = false
         mut has_cppincludes = false
-        mut output = ""
+        mut output_filename: String? = None
+        mut output: String? = None
         mut cppincludes = ""
 
         while not .is_eof() {
@@ -114,24 +145,30 @@ struct Parser {
             .index++
             .skip_whitespace()
 
-            if not success_test {
-                success_test = .lex_literal("output")
-            }
-            if not compile_error {
-                compile_error = .lex_literal("error")
-            }
-            if not runtime_error {
-                runtime_error = .lex_literal("stderr")
+            mut includes_line = false
+            mut output_line = false
+
+            if .lex_literal("cppincludes") {
+                has_cppincludes = true
+
+                includes_line = true
+            } else if .lex_literal("output") {
+                success_test = true
+
+                output_line = true
+            } else if .lex_literal("error") {
+                compile_error = true
+
+                output_line = true
+            } else if .lex_literal("stderr") {
+                runtime_error = true
+
+                output_line = true
             }
 
             if (success_test as! u8 + compile_error as! u8 + runtime_error as! u8) > 1 {
                 eprintln("Too many test directives")
                 return ParsedTest::NoExpectOrSkip
-            }
-            let expect_output = success_test or compile_error or runtime_error
-
-            if not has_cppincludes {
-                has_cppincludes =  .lex_literal("cppincludes")
             }
 
             guard success_test or compile_error or runtime_error or has_cppincludes else {
@@ -144,46 +181,68 @@ struct Parser {
             }
             .index++
             .skip_whitespace()
-            let quoted_string_span = .lex_quoted_string()
-            if not quoted_string_span.has_value() {
-                return ParsedTest::NoExpectOrSkip
+
+            mut is_file_output = false
+            mut string_span = .lex_quoted_string()
+            if not string_span.has_value() {
+                string_span = .lex_string()
+                if not string_span.has_value() {
+                    return ParsedTest::NoExpectOrSkip
+                } else {
+                    is_file_output = true
+                }
             }
 
             // create the string
-            let span = quoted_string_span!
+            let span = string_span!
             mut builder = StringBuilder::create()
             for i in span.start..span.end {
                 builder.append(.input[i])
             }
 
             let parsed_string = parse_quoted_string(builder.to_string())
+
             .skip_whitespace()
             .index++
 
-            if output.is_empty() and expect_output {
-                output = parsed_string
-                continue
-            }
-            else if not has_cppincludes {
+            if output_line {
+                if is_file_output {
+                    if not output_filename.has_value() {
+                        output_filename = parsed_string
+                    }
+                } else {
+                    if not output.has_value() {
+                        output = parsed_string
+                    }
+                }
+            } else if includes_line {
+                cppincludes = parsed_string
+            } else {
                 panic("Unexpected token state in parse_test_information")
             }
-            cppincludes = parsed_string
         }
+
         if success_test {
-            return ParsedTest::SuccessTest(output, cppincludes)
+            return ParsedTest::SuccessTest(output_filename, output, cppincludes)
         }
         if compile_error {
-            return ParsedTest::CompileErrorTest(output, cppincludes)
+            return ParsedTest::CompileErrorTest(output_filename, output, cppincludes)
         }
         if runtime_error {
-            return ParsedTest::RuntimeErrorTest(output, cppincludes)
+            return ParsedTest::RuntimeErrorTest(output_filename, output, cppincludes)
         }
+
         return ParsedTest::NoExpectOrSkip
     }
 
     function parse(input: [u8]) throws -> ParsedTest {
         mut parser = Parser(index: 0, input)
         return parser.parse_test()
+    }
+
+    function get_result(input: [u8]) throws -> [u8] {
+        mut parser = Parser(index: 0, input)
+        return parser.get_result()
     }
 }
 

@@ -1,0 +1,6 @@
+/// Expect:
+/// - output: test_output.txt
+
+function main() {
+    println("PASS")
+}

@@ -1,0 +1,33 @@
+/// Expect:
+/// - output: "0 a\n1 b\n2 c\n"
+
+struct Enumerator<T> implements(Iterable<T>) {
+    index: usize
+    iterator: ArrayIterator<T>
+
+    function next(mut this) -> (usize, T)? {
+        .index++
+
+        let item: T? = .iterator.next()
+        if item.has_value() {
+            return Some((.index - 1, item!))
+        } else {
+            return None
+        }
+    }
+}
+
+function enumerate<T>(anon iterator: ArrayIterator<T>) -> Enumerator<T> {
+    return Enumerator(
+        index: 0
+        iterator
+    )
+}
+
+function main() {
+    let arr = ["a", "b", "c"]
+
+    for (i, foo) in enumerate(arr.iterator()) {
+        println("{} {}", i, foo)
+    }
+}

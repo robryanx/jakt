@@ -3442,6 +3442,23 @@ struct Typechecker {
         else => other_branch.partial()
     }
 
+    function set_generic_inference(this, generic_inferences: &mut GenericInferences, from_type_id: TypeId, to_type_id: TypeId) throws {
+        let from_type = .get_type(from_type_id)
+        let to_type = .get_type(to_type_id)
+
+        // FIXME: This avoids setting a generic inference of for example T = T where each T is 
+        // currently a separate type_id in different scopes, which can happen when calling a generic instance
+        // that is defined in another scope. For example Array<T>, Optional<T> etc
+        // possibly they should be the same type_id?
+        if from_type is TypeVariable(from_name) and 
+            to_type is TypeVariable(to_name) and 
+            from_name == from_name {
+            return
+        }
+
+        generic_inferences.set(key: from_type_id.to_string(), value: to_type_id.to_string())
+    }
+
     // FIXME: Use [TypeId: TypeID] without TypeId.to_string()/TypeId::from_string() workaround
     function check_types_for_compat(
         mut this
@@ -3468,7 +3485,15 @@ struct Typechecker {
         let array_struct_id = .find_struct_in_prelude("Array")
 
         match lhs_type {
-            TypeVariable => {
+            TypeVariable(lhs_name) => {
+                // FIXME: This will have `TypeVariable`s of the same name always be compatible
+                // This avoids the issue at the moment where we will have for example 2 type T's
+                // and only 1 will have an inference, so once the inference is set they will mismatch.
+                // This probably needs a more fine grained solution.
+                if rhs_type is TypeVariable(rhs_name) and lhs_name == rhs_name {
+                    return true
+                }
+
                 // If the call expects a generic type variable, let's see if we've already seen it
                 mut seen_type_id_string = generic_inferences.get(lhs_type_id_string)
                 if seen_type_id_string.has_value() {
@@ -3494,7 +3519,7 @@ struct Typechecker {
                         return false
                     }
                 } else {
-                    generic_inferences.set(key: lhs_type_id_string, value: rhs_type_id_string)
+                    .set_generic_inference(generic_inferences: &mut generic_inferences, from_type_id: lhs_type_id, to_type_id: rhs_type_id)
                 }
             }
             GenericEnumInstance(id: lhs_enum_id, args: lhs_args) => {
@@ -3705,7 +3730,7 @@ struct Typechecker {
                                 return false
                             }
                         } else {
-                            generic_inferences.set(key: lhs_type_id_string, value: rhs_type_id_string)
+                            .set_generic_inference(generic_inferences: &mut generic_inferences, from_type_id: lhs_type_id, to_type_id: rhs_type_id)
                         }
                     }
                     else => {
@@ -3771,7 +3796,7 @@ struct Typechecker {
                                 return false
                             }
                         } else {
-                            generic_inferences.set(key: lhs_type_id_string, value: rhs_type_id_string)
+                            .set_generic_inference(generic_inferences: &mut generic_inferences, from_type_id: lhs_type_id, to_type_id: rhs_type_id)
                         }
                     }
                     else => {
@@ -6712,7 +6737,7 @@ struct Typechecker {
                 let generic = enum_.generic_parameters[i].type_id.to_string()
                 let argument_type = args[i].to_string()
                 if generic != argument_type {
-                    .generic_inferences.set(generic, argument_type)
+                    .set_generic_inference(generic_inferences: &mut .generic_inferences, from_type_id: enum_.generic_parameters[i].type_id, to_type_id: args[i])
                 }
             }
         }
@@ -7347,7 +7372,7 @@ struct Typechecker {
             let typevar_type_id = callee_candidate.generics.params[type_arg_index].type_id()
 
             if not typevar_type_id.equals(checked_type) {
-                .generic_inferences.set(typevar_type_id.to_string(), checked_type.to_string())
+                .set_generic_inference(generic_inferences: &mut .generic_inferences, from_type_id: typevar_type_id, to_type_id: checked_type)
             }
 
             type_arg_index += 1
@@ -7369,10 +7394,7 @@ struct Typechecker {
                         continue
                     }
 
-                    .generic_inferences.set(
-                        structure.generic_parameters[i].type_id.to_string()
-                        args[i].to_string()
-                    )
+                    .set_generic_inference(generic_inferences: &mut .generic_inferences, from_type_id: structure.generic_parameters[i].type_id, to_type_id: args[i])
                 }
             }
 
@@ -7401,12 +7423,14 @@ struct Typechecker {
                 let (name, span, checked_arg) = resolved_args[i]
                 let type_to = .get_type(callee_candidate.generics.base_params[i+arg_offset].variable.type_id)
                 total_function_specificity += type_to.specificity(program: .program)
+                
                 .check_types_for_compat(
                     lhs_type_id: callee_candidate.generics.base_params[i+arg_offset].variable.type_id
                     rhs_type_id: checked_arg.type()
                     generic_inferences: &mut .generic_inferences
                     span: checked_arg.span()
                 )
+
                 args.push(checked_arg)
             }
         }

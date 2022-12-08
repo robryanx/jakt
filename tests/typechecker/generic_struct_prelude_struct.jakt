@@ -1,0 +1,24 @@
+/// Expect:
+/// - output: "1\nS\n"
+
+struct Foo<T> {
+    value: [T]
+
+    function give(this) throws -> [T] {
+        mut a: [T] = []
+
+        a.push(.value[0])
+
+        return a
+    }
+}
+
+function main() {
+    let foo = Foo(value: [1])
+    
+    println("{}", foo.give()[0])
+    
+    let bar = Foo(value: ["S"])
+    
+    println("{}", bar.give()[0])
+}

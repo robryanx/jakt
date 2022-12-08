@@ -1,0 +1,18 @@
+struct InnerValues<T> {
+    values: [T]
+}
+
+struct Values<T> {
+    values: [T]
+
+    function iv(this) -> InnerValues<T> => InnerValues(
+        values: .values
+    )
+}
+
+function main() {
+    let values = Values(values: [1, 2, 3, 4])
+    let inner_values = values.iv()
+
+    println("{}", inner_values)
+}
